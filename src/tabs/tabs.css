@@ -1,0 +1,29 @@
+/* ProgressBar.css */
+.progress-bar {
+  margin: 0 10px;
+  height: 5px;
+  width: 95%;
+  background-color: #e0e0df;
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar-fill {
+  height: 5px;
+  background-color: #1889c5;
+  width: 0;
+  transition: width 1s ease-in-out;
+  border-radius: 5px;
+}
+
+/* scrollbar design */
+::-webkit-scrollbar {
+  width: 2px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #4f4f4f;
+}
