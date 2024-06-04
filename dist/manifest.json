@@ -1,0 +1,46 @@
+{
+  "name": "ExamLock Lite",
+  "description": "react and webpack",
+  "version": "2.1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "/assets/icon.png"
+  },
+  "icons": {
+    "128": "/assets/icon.png"
+  },
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "permissions": [
+    "notifications",
+    "tabs",
+    "management",
+    "cookies",
+    "storage",
+    "activeTab",
+    "system.memory",
+    "system.display",
+    "system.cpu",
+    "browsingData",
+    "desktopCapture",
+    "tabCapture",
+    "identity",
+    "input",
+    "windows",
+    "scripting"
+  ],
+  "background": {
+    "service_worker": "background.bundle.js"
+  },
+  "externally_connectable": {
+    "matches": ["*://localhost/*", "http://127.0.0.1:5500/index.html"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "js": ["content.bundle.js"]
+    }
+  ]
+}
