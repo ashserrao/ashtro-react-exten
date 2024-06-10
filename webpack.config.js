@@ -2,23 +2,23 @@
 
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
-const CopyWebpackPlugin = require("copy-webpack-plugin");
+const CopyWebPackPlugin = require("copy-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
 
 const stylesHandler = MiniCssExtractPlugin.loader;
 
-const alias = {}; // Update this with your actual aliases if any
+const alias = {};
 const fileExtensions = ["js", "jsx", "ts", "tsx", "css"];
 
 const config = {
   entry: {
-    background: path.join(__dirname, "src", "background", "index.js"),
-    content: path.join(__dirname, "src", "content", "index.js"),
-    popup: path.join(__dirname, "src", "Popup", "index.jsx"),
-    styles: path.join(__dirname, "src", "Popup", "style.css"),
-    systemcheck: path.join(__dirname, "src", "Systemcheck", "index.jsx"),
+    background: path.join(__dirname, "src", "Background", "index.js"),
+    content: path.join(__dirname, "src", "Content", "index.js"),
+    popup: path.join(__dirname, "src", "Pages", "Popup", "index.jsx"),
+    recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
+    output: path.join(__dirname, "src", "index.css"),
   },
   resolve: {
     alias: alias,
@@ -27,19 +27,37 @@ const config = {
       .concat([".js", ".jsx", ".ts", ".tsx", ".css"]),
   },
   output: {
-    filename: "[name].bundle.js",
     path: path.resolve(__dirname, "dist"),
+    filename: "[name].bundle.js",
   },
   devServer: {
     open: true,
     host: "localhost",
   },
   plugins: [
+    // new HtmlWebpackPlugin({
+    //     template: 'index.html',
+    // }),
     new HtmlWebpackPlugin({
-      template: "./public/index.html",
+      template: path.join(__dirname, "src", "Pages", "Popup", "index.html"),
+      filename: "popup.html",
+      chunks: ["popup", "output"],
     }),
-    new MiniCssExtractPlugin(),
-    new CopyWebpackPlugin({
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
+      filename: "recording.html",
+      chunks: ["recording", "output"],
+    }),
+    new CopyWebPackPlugin({
+      patterns: [
+        {
+          from: "src/assets",
+          to: path.join(__dirname, "dist", "assets"),
+          force: true,
+        },
+      ],
+    }),
+    new CopyWebPackPlugin({
       patterns: [
         {
           from: "src/manifest.json",
@@ -48,25 +66,9 @@ const config = {
         },
       ],
     }),
-    new CopyWebpackPlugin({
-      patterns: [
-        {
-          from: "src/assets",
-          to: path.join(__dirname, "dist/assets"),
-          force: true,
-        },
-      ],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Popup", "index.html"),
-      filename: "popup.html",
-      chunks: ["popup", "styles"],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Systemcheck", "index.html"),
-      filename: "systemcheck.html",
-      chunks: ["systemcheck", "styles"],
-    }),
+
+    new MiniCssExtractPlugin(),
+
     // Add your plugins here
     // Learn more about plugins from https://webpack.js.org/configuration/plugins/
   ],
@@ -75,46 +77,22 @@ const config = {
       {
         test: /\.(js|jsx)$/i,
         exclude: /node_modules/,
-        use: {
-          loader: "babel-loader",
-        },
+        loader: "babel-loader",
       },
       {
         test: /\.s[ac]ss$/i,
-        use: [
-          stylesHandler,
-          "css-loader",
-          {
-            loader: "postcss-loader",
-            options: {
-              postcssOptions: {
-                plugins: [require("tailwindcss"), require("autoprefixer")],
-              },
-            },
-          },
-          "sass-loader",
-        ],
+        use: [stylesHandler, "css-loader", "postcss-loader", "sass-loader"],
       },
       {
         test: /\.css$/i,
-        use: [
-          stylesHandler,
-          "css-loader",
-          {
-            loader: "postcss-loader",
-            options: {
-              postcssOptions: {
-                plugins: [require("tailwindcss"), require("autoprefixer")],
-              },
-            },
-          },
-        ],
+        use: [stylesHandler, "css-loader", "postcss-loader"],
       },
       {
         test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
-        type: "asset/resource",
         exclude: /node_modules/,
+        type: "asset",
       },
+
       // Add your rules for custom modules here
       // Learn more about loaders from https://webpack.js.org/loaders/
     ],

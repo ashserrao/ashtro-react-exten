@@ -1,16 +1,15 @@
 {
-  "name": "ExamLock Lite",
-  "description": "react and webpack",
-  "version": "2.1.0",
+  "name": "Ashtro exten",
+  "description": "extension with react and webpack",
+  "version": "0.2.1",
   "manifest_version": 3,
   "action": {
-    "default_popup": "popup.html",
     "default_icon": "/assets/icon.png"
   },
   "icons": {
     "128": "/assets/icon.png"
   },
-  "host_permissions": ["http://*/*", "https://*/*"],
+  "host_permissions": ["http://*/*", "https://*/*", "*://localhost/*"],
   "permissions": [
     "notifications",
     "tabs",
@@ -41,6 +40,12 @@
       "run_at": "document_start",
       "all_frames": true,
       "js": ["content.bundle.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["camera.html"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
