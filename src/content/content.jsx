@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Camera from "./camera";
 
-function Content() {
+function Content(togglepopup) {
+  // Destructure togglepopup from props
   const containerStyle = {
     position: "fixed",
     width: "300px",

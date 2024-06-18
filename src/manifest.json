@@ -4,6 +4,7 @@
   "version": "0.2.1",
   "manifest_version": 3,
   "action": {
+    "default_popup": "popup.html",
     "default_icon": "/assets/icon.png"
   },
   "icons": {

@@ -1,110 +1,204 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 function Camera() {
+  const [recStatus, setRecStatus] = useState(false);
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioDevices, setAudioDevices] = useState([]);
-  const [stream, setStream] = useState(null);
-  const [recStatus, setRecStatus] = useState(false);
+  const [videoDeviceId, setVideoDeviceId] = useState("");
+  const [audioDeviceId, setAudioDeviceId] = useState("");
+  let recordings = [];
+
+  const screenRecorderRef = useRef(null);
+  const webcamRecorderRef = useRef(null);
+  const screenStreamRef = useRef(null);
+  const webcamStreamRef = useRef(null);
 
   useEffect(() => {
-    const getMediaDevices = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoSelect = devices.filter(
-          (device) => device.kind === "videoinput"
-        );
-        const audioSelect = devices.filter(
-          (device) => device.kind === "audioinput"
-        );
-        setVideoDevices(videoSelect);
-        setAudioDevices(audioSelect);
-      } catch (error) {
-        console.error("Error accessing media devices.", error);
-      }
-    };
+    getDevices();
+  }, []);
 
-    getMediaDevices();
-
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [stream]);
-
-  const requestAccess = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: true,
-      });
-      setStream(stream);
-    } catch (error) {
-      console.error("Error accessing media devices.", error);
-    }
-  };
-
-  useEffect(() => {
-    if (!stream) {
-      requestAccess();
-    }
-  }, [stream]);
-
-  const startVideo = async () => {
-    setRecStatus(!recStatus);
-    const videoElement = document.getElementById("videoPreview");
+  const updateDevice = () => {
     const videoSelect = document.getElementById("videoDevices");
     const audioSelect = document.getElementById("audioDevices");
-    const videoDeviceId = videoSelect.value;
-    const audioDeviceId = audioSelect.value;
 
-    if (window.stream) {
-      window.stream.getTracks().forEach((track) => track.stop());
-    }
+    setVideoDeviceId(videoSelect.value);
+    setAudioDeviceId(audioSelect.value);
+  };
 
-    const constraints = {
-      video: {
-        deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
-      },
-      audio: {
-        deviceId: audioDeviceId ? { exact: audioDeviceId } : undefined,
-      },
+  const getDevices = () => {
+    navigator.mediaDevices
+      .enumerateDevices()
+      .then((devices) => {
+        const videoInputs = devices.filter(
+          (device) => device.kind === "videoinput"
+        );
+        const audioInputs = devices.filter(
+          (device) => device.kind === "audioinput"
+        );
+        setVideoDevices(videoInputs);
+        setAudioDevices(audioInputs);
+      })
+      .catch((err) => console.error("Error getting media devices: ", err));
+  };
+
+  const saveVideos = () => {
+    let message = {
+      action: "save-video",
+      recording: recordings,
     };
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      window.stream = stream;
-      videoElement.srcObject = stream;
-    } catch (error) {
-      console.error("Error starting video stream.", error);
+    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage(message, (response) => {
+        console.log(response);
+      });
+    } else {
+      console.log("Chrome runtime not available");
     }
   };
 
-  const stopVideo = () => {
-    setRecStatus(!recStatus);
-    if (window.stream) {
-      window.stream.getTracks().forEach((track) => track.stop());
+  const startVideo = () => {
+    getPermissions();
+    setTimeout(() => {
       let message = {
         action: "recording-page",
       };
-      chrome.runtime.sendMessage(message, (response) => {
-        console.log("recording page opened", response);
+      if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage(message, (response) => {
+          console.log("recording page opened", response);
+        });
+      } else {
+        console.log("Chrome runtime not available");
+      }
+    }, 10000);
+  };
+
+  const stopVideo = () => {
+    setRecStatus(false);
+    if (screenRecorderRef.current) screenRecorderRef.current.stop();
+    if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => {
+        if (track.readyState === "live") {
+          track.stop();
+        }
+      });
+    }
+
+    if (webcamStreamRef.current) {
+      webcamStreamRef.current.getTracks().forEach((track) => {
+        if (track.readyState === "live") {
+          track.stop();
+        }
       });
     }
   };
 
-  useEffect(() => {
-    const videoSelect = document.getElementById("videoDevices");
-    videoSelect.addEventListener("change", recStatus ? startVideo : null);
+  const onAccessApproved = (screenStream, webcamStream) => {
+    setRecStatus(!recStatus);
 
-    const audioSelect = document.getElementById("audioDevices");
-    audioSelect.addEventListener("change", recStatus ? startVideo : null);
+    screenStreamRef.current = screenStream;
+    webcamStreamRef.current = webcamStream;
 
-    return () => {
-      videoSelect.removeEventListener("change", recStatus ? startVideo : null);
-      audioSelect.removeEventListener("change", recStatus ? startVideo : null);
+    screenRecorderRef.current = new MediaRecorder(screenStream);
+    webcamRecorderRef.current = new MediaRecorder(webcamStream);
+
+    let videoPreview = document.getElementById("videoPreview");
+    videoPreview.srcObject = webcamStream;
+
+    screenRecorderRef.current.start();
+    webcamRecorderRef.current.start();
+
+    const blobs = {
+      screen: [],
+      webcam: [],
     };
-  }, []);
+
+    screenRecorderRef.current.ondataavailable = function (event) {
+      blobs.screen.push(event.data);
+    };
+
+    webcamRecorderRef.current.ondataavailable = function (event) {
+      blobs.webcam.push(event.data);
+    };
+
+    screenRecorderRef.current.onstop = function () {
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => {
+          if (track.readyState === "live") {
+            track.stop();
+          }
+        });
+      }
+      console.log(blobs.screen);
+      recordings.push(blobs.screen);
+    };
+
+    webcamRecorderRef.current.onstop = function () {
+      if (webcamStreamRef.current) {
+        webcamStreamRef.current.getTracks().forEach((track) => {
+          if (track.readyState === "live") {
+            track.stop();
+          }
+        });
+      }
+      console.log(blobs.webcam);
+      recordings.push(blobs.webcam);
+      setTimeout(() => {
+      saveVideos();
+      }, 5000)
+
+    };
+  };
+
+  const getPermissions = () => {
+    navigator.mediaDevices
+      .getDisplayMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          channelCount: 2,
+        },
+        video: {
+          width: 999999999,
+          height: 999999999,
+          displaySurface: "monitor",
+        },
+      })
+      .then((screenStream) => {
+        const constraints = {
+          video: {
+            deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+          },
+          audio: {
+            deviceId: audioDeviceId ? { exact: audioDeviceId } : undefined,
+          },
+        };
+        navigator.mediaDevices
+          .getUserMedia(constraints)
+          .then((webcamStream) => {
+            onAccessApproved(screenStream, webcamStream);
+            setTimeout(() => {
+              console.log(
+                `${
+                  screenStream.getVideoTracks()[0].getSettings().displaySurface
+                }`
+              );
+              console.log(
+                `webcam audio: ${webcamStream.getAudioTracks().length}`
+              );
+              console.log(
+                `screen audio: ${screenStream.getAudioTracks().length}`
+              );
+            }, 2000);
+          })
+          .catch((error) => {
+            console.log("error accessing webcam", error);
+          });
+      })
+      .catch((error) => {
+        console.log("error starting screen recording", error);
+      });
+  };
 
   return (
     <div>
@@ -143,15 +237,25 @@ function Camera() {
           width: 80%;
         }
       `}</style>
-      <video id="videoPreview" autoPlay width={300}></video>
-      <select id="videoDevices" className="videoDevices" disabled={recStatus}>
+      <video id="videoPreview" muted autoPlay width={300}></video>
+      <select
+        id="videoDevices"
+        className="videoDevices"
+        disabled={recStatus}
+        onChange={updateDevice}
+      >
         {videoDevices.map((device, index) => (
           <option key={index} value={device.deviceId}>
             {device.label || `Camera ${index + 1}`}
           </option>
         ))}
       </select>
-      <select id="audioDevices" className="audioDevices" disabled={recStatus}>
+      <select
+        id="audioDevices"
+        className="audioDevices"
+        disabled={recStatus}
+        onChange={updateDevice}
+      >
         {audioDevices.map((device, index) => (
           <option key={index} value={device.deviceId}>
             {device.label || `Mic ${index + 1}`}

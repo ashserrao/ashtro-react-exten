@@ -18,6 +18,30 @@ const config = {
     content: path.join(__dirname, "src", "Content", "index.js"),
     popup: path.join(__dirname, "src", "Pages", "Popup", "index.jsx"),
     recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
+    systemcheck: path.join(
+      __dirname,
+      "src",
+      "Pages",
+      "Systemcheck",
+      "index.jsx"
+    ),
+    softconfig: path.join(__dirname, "src", "Pages", "Softconfig", "index.jsx"),
+    browserconfig: path.join(
+      __dirname,
+      "src",
+      "Pages",
+      "Browserconfig",
+      "index.jsx"
+    ),
+    networkconfig: path.join(
+      __dirname,
+      "src",
+      "Pages",
+      "Networkconfig",
+      "index.jsx"
+    ),
+    consent: path.join(__dirname, "src", "Pages", "Consent", "index.jsx"),
+    id_scan: path.join(__dirname, "src", "Pages", "ID_scan", "index.jsx"),
     output: path.join(__dirname, "src", "index.css"),
   },
   resolve: {
@@ -35,9 +59,6 @@ const config = {
     host: "localhost",
   },
   plugins: [
-    // new HtmlWebpackPlugin({
-    //     template: 'index.html',
-    // }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, "src", "Pages", "Popup", "index.html"),
       filename: "popup.html",
@@ -47,6 +68,60 @@ const config = {
       template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
       filename: "recording.html",
       chunks: ["recording", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(
+        __dirname,
+        "src",
+        "Pages",
+        "Systemcheck",
+        "index.html"
+      ),
+      filename: "systemcheck.html",
+      chunks: ["systemcheck", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(
+        __dirname,
+        "src",
+        "Pages",
+        "Softconfig",
+        "index.html"
+      ),
+      filename: "softconfig.html",
+      chunks: ["softconfig", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(
+        __dirname,
+        "src",
+        "Pages",
+        "Browserconfig",
+        "index.html"
+      ),
+      filename: "browserconfig.html",
+      chunks: ["browserconfig", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(
+        __dirname,
+        "src",
+        "Pages",
+        "Networkconfig",
+        "index.html"
+      ),
+      filename: "networkconfig.html",
+      chunks: ["networkconfig", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Consent", "index.html"),
+      filename: "consent.html",
+      chunks: ["consent", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "ID_scan", "index.html"),
+      filename: "id_scan.html",
+      chunks: ["id_scan", "output"],
     }),
     new CopyWebPackPlugin({
       patterns: [
@@ -68,9 +143,6 @@ const config = {
     }),
 
     new MiniCssExtractPlugin(),
-
-    // Add your plugins here
-    // Learn more about plugins from https://webpack.js.org/configuration/plugins/
   ],
   module: {
     rules: [
@@ -92,9 +164,6 @@ const config = {
         exclude: /node_modules/,
         type: "asset",
       },
-
-      // Add your rules for custom modules here
-      // Learn more about loaders from https://webpack.js.org/loaders/
     ],
   },
 };

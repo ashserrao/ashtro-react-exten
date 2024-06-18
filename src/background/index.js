@@ -8,9 +8,9 @@ chrome.action.onClicked.addListener((tab) => {
       action: "trigger",
     };
     // Send a message to the active tab
-    chrome.tabs.sendMessage(activeTab.id, message, (response) => {
-      console.log("bg working");
-    });
+    // chrome.tabs.sendMessage(activeTab.id, message, (response) => {
+    //   console.log("bg working");
+    // });
   });
 });
 

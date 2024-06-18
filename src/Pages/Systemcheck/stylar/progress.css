@@ -1,0 +1,30 @@
+/* progress bar for core utilization */
+progress[value] {
+  --color: #1889c5;
+  --background: lightgrey;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+  height: 5px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border-radius: 10em;
+  background: var(--background);
+}
+progress[value]::-webkit-progress-bar {
+  border-radius: 10em;
+  background: var(--background);
+}
+progress[value]::-webkit-progress-value {
+  border-radius: 10em;
+  background: var(--color);
+}
+progress[value]::-moz-progress-bar {
+  border-radius: 10em;
+  background: var(--color);
+}
+progress::-webkit-progress-value {
+  transition: width 1s ease;
+}

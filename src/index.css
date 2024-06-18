@@ -16,6 +16,17 @@ code {
     monospace;
 }
 
+/* scrollbar design */
+::-webkit-scrollbar {
+  width: 2px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: #4f4f4f;
+}
+
 .canvas {
   margin: 0;
   padding: 0;
