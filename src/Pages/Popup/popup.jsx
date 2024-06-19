@@ -91,6 +91,13 @@ const Popup = () => {
           id="begin-system-check"
           onClick={() => {
             window.location = "systemcheck.html";
+            let message = {
+              action: "record-tab",
+              data: "System Check",
+            };
+            chrome.runtime.sendMessage(message, (response) => {
+              console.log(response);
+            });
           }}
         >
           Begin System Check

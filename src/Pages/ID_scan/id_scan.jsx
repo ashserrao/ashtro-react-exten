@@ -4,7 +4,9 @@ import Modal from "react-modal";
 import { Navbar } from "../Recording/recording";
 
 function Idscan() {
+  let imagesAllowed = 2;
   const webcamRef = useRef(null);
+  const [submit, setSubmit] = useState(false);
   const [images, setImages] = useState([]);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -12,14 +14,26 @@ function Idscan() {
 
   const capture = () => {
     const imageSrc = webcamRef.current.getScreenshot();
-    setImages((prevImages) => [...prevImages, imageSrc]);
+    setImages((prevImages) => {
+      const newImages = [...prevImages, imageSrc];
+      if (newImages.length >= imagesAllowed) {
+        setSubmit(true);
+      }
+      return newImages;
+    });
   };
 
   const handleUpload = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImages((prevImages) => [...prevImages, reader.result]);
+      setImages((prevImages) => {
+        const newImages = [...prevImages, reader.result];
+        if (newImages.length >= imagesAllowed) {
+          setSubmit(true);
+        }
+        return newImages;
+      });
     };
     if (file) {
       reader.readAsDataURL(file);
@@ -28,11 +42,18 @@ function Idscan() {
   };
 
   const deleteImage = (index) => {
-    setImages((prevImages) => prevImages.filter((_, i) => i !== index));
+    setImages((prevImages) => {
+      const newImages = prevImages.filter((_, i) => i !== index);
+      if (newImages.length < imagesAllowed) {
+        setSubmit(false);
+      }
+      return newImages;
+    });
   };
 
   const clearAllImages = () => {
     setImages([]);
+    setSubmit(false);
   };
 
   const openUploadModal = () => {
@@ -53,6 +74,18 @@ function Idscan() {
     setCurrentImage(null);
   };
 
+  const handleSubmit = async () => {
+    console.log("Submitting images:", images);
+    let message = {
+      action: "id-cards",
+      data: images,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log("Response from background script:", response);
+    });
+    window.location = "./face_scan.html";
+  };
+
   return (
     <div>
       <style>{`
@@ -68,7 +101,10 @@ function Idscan() {
     `}</style>
       <Navbar />
       <div className="flex flex-wrap">
-        <div className="h-full w-1/2 rounded border">
+        <div
+          className="h-full w-1/2 rounded border"
+          style={{ height: "35.5rem" }}
+        >
           <h1 className="text-center text-lg font-semibold">ID scan</h1>
           <div className="w-full flex justify-center">
             <Webcam
@@ -82,13 +118,16 @@ function Idscan() {
           <div className="w-full flex justify-center">
             <button
               className="m-2 bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700"
-              onClick={capture}
+              onClick={submit ? handleSubmit : capture}
             >
-              Capture photo
+              {submit ? "Submit" : "Capture photo"}
             </button>
             <button
               onClick={openUploadModal}
-              className="m-2 bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700"
+              className={`m-2 bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700 ${
+                submit && "cursor-not-allowed opacity-50"
+              }`}
+              disabled={submit}
             >
               Upload Image
             </button>
@@ -100,47 +139,57 @@ function Idscan() {
             </button>
           </div>
         </div>
-        <div className="w-1/2 p-2 rounded border">
-          <h1 className="font-semibold">Instructions</h1>
+        <div
+          className="border rounded w-1/2 h-1/5 overflow-scroll"
+          style={{ height: "35.5rem" }}
+        >
+          <h1 className="p-1 text-lg font-semibold">Preview</h1>
           <hr />
-          <div className="px-6 my-2">
-            <ul>
-              <li>
-                Your can either capture the ID using your web-camera or you can
-                upload the image of your ID
-              </li>
-              <li>
-                Please align yourself in the middle of the frame before
-                capturing the photo.
-              </li>
-              <li>
-                Please upload a valid ID else your exam will be disqualified.
-              </li>
-              <li>Please make sure the ID is not expired.</li>
-              <li>One photo ID is mandatory.</li>
-            </ul>
+          <div className="flex flex-wrap w-full">
+            <div className="flex flex-wrap">
+              {images.map((src, index) => (
+                <div key={index} className="w-fit my-2 mx-4 p-2 border">
+                  <h1>{`Image ${index + 1}`}</h1>
+                  <img
+                    onClick={() => openViewModal(src)}
+                    src={src}
+                    alt={`Captured ${index + 1}`}
+                    style={{ width: "400px", cursor: "pointer" }}
+                  />
+                  <button
+                    onClick={() => deleteImage(index)}
+                    className="my-2 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap">
-        {images.map((src, index) => (
-          <div key={index} className="w-fit my-2 mx-4 p-2 border">
-            <h1>{`Image ${index + 1}`}</h1>
-            <img
-              onClick={() => openViewModal(src)}
-              src={src}
-              alt={`Captured ${index + 1}`}
-              style={{ width: "400px" }}
-            />
-            <button
-              onClick={() => deleteImage(index)}
-              className="my-2 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700"
-            >
-              Delete
-            </button>
-          </div>
-        ))}
+      <div className="w-full p-2 rounded border my-4">
+        <h1 className="text-lg font-semibold">Instructions</h1>
+        <hr />
+        <div className="px-6 my-2">
+          <ul>
+            <li>
+              Your can either capture the ID using your web-camera or you can
+              upload the image of your ID
+            </li>
+            <li>
+              Please align yourself in the middle of the frame before capturing
+              the photo.
+            </li>
+            <li>
+              Please upload a valid ID else your exam will be disqualified.
+            </li>
+            <li>Please make sure the ID is not expired.</li>
+            <li>One photo ID is mandatory.</li>
+          </ul>
+        </div>
       </div>
+
       <Modal
         isOpen={isUploadModalOpen}
         onRequestClose={closeUploadModal}
@@ -187,7 +236,7 @@ function Idscan() {
             onClick={closeViewModal}
             className="mt-4 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700 justify-right"
           >
-            close
+            Close
           </button>
         </div>
         {currentImage && (

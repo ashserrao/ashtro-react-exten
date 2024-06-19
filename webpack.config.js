@@ -17,7 +17,6 @@ const config = {
     background: path.join(__dirname, "src", "Background", "index.js"),
     content: path.join(__dirname, "src", "Content", "index.js"),
     popup: path.join(__dirname, "src", "Pages", "Popup", "index.jsx"),
-    recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
     systemcheck: path.join(
       __dirname,
       "src",
@@ -42,6 +41,8 @@ const config = {
     ),
     consent: path.join(__dirname, "src", "Pages", "Consent", "index.jsx"),
     id_scan: path.join(__dirname, "src", "Pages", "ID_scan", "index.jsx"),
+    face_scan: path.join(__dirname, "src", "Pages", "Face_scan", "index.jsx"),
+    recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
     output: path.join(__dirname, "src", "index.css"),
   },
   resolve: {
@@ -63,11 +64,6 @@ const config = {
       template: path.join(__dirname, "src", "Pages", "Popup", "index.html"),
       filename: "popup.html",
       chunks: ["popup", "output"],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
-      filename: "recording.html",
-      chunks: ["recording", "output"],
     }),
     new HtmlWebpackPlugin({
       template: path.join(
@@ -122,6 +118,16 @@ const config = {
       template: path.join(__dirname, "src", "Pages", "ID_scan", "index.html"),
       filename: "id_scan.html",
       chunks: ["id_scan", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Face_scan", "index.html"),
+      filename: "face_scan.html",
+      chunks: ["face_scan", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
+      filename: "recording.html",
+      chunks: ["recording", "output"],
     }),
     new CopyWebPackPlugin({
       patterns: [

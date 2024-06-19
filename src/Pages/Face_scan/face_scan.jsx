@@ -1,9 +1,9 @@
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
 import Modal from "react-modal";
-import { Navbar } from "./Pages/Recording/recording";
+import { Navbar } from "../Recording/recording";
 
-const WebcamCapture = () => {
+function Facescan() {
   let imagesAllowed = 1;
   const webcamRef = useRef(null);
   const [submit, setSubmit] = useState(false);
@@ -37,16 +37,27 @@ const WebcamCapture = () => {
     setCurrentImage(null);
   };
 
+  const switchback = () => {
+    let message = {
+      action: "switch-tab",
+      data: images,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log("Response from background script:", response);
+    });
+  };
+
   const handleSubmit = async () => {
     console.log("Submitting images:", images);
-    // let message = {
-    //   action: "face-capture",
-    //   data: images,
-    // };
-    // chrome.runtime.sendMessage(message, (response) => {
-    //   console.log("Response from background script:", response);
-    // });
-    // window.location = "./face_scan.html";
+    let message = {
+      action: "face-capture",
+      data: images,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log("Response from background script:", response);
+    });
+    switchback();
+    // window.location = "./recording.html";
   };
 
   return (
@@ -128,6 +139,7 @@ const WebcamCapture = () => {
               Please align yourself in between the camera frame before clicking
               the photo.
             </li>
+            <li>Please look towards the camera while capturing the picture.</li>
             <li>
               Incase the marksheet requires a photo the same photo will be
               attached.
@@ -169,6 +181,6 @@ const WebcamCapture = () => {
       </Modal>
     </div>
   );
-};
+}
 
-export default WebcamCapture;
+export default Facescan;
