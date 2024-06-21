@@ -17,7 +17,6 @@ function Content() {
     left: "10px",
     borderRadius: "10px",
     cursor: "move",
-    fontFamily: "'Roboto', sans-serif",
   };
 
   useEffect(() => {

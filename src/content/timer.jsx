@@ -82,6 +82,7 @@ const Timer = () => {
           marginTop: "0.4rem",
           fontSize: "1rem",
           color: "black",
+          fontFamily: "'Roboto', sans-serif",
         }}
       >
         {timer}

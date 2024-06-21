@@ -127,8 +127,10 @@ function Minified() {
           fontSize: "1.125rem",
           lineHeight: "1.75rem",
           fontWeight: "600",
+          color: "black",
           display: isOpen ? "block" : "none",
-          flex: "0 1 auto", // Ensure it behaves properly within flexbox
+          flex: "0 1 auto",
+          fontFamily: "'Roboto', sans-serif",
         }}
       >
         ExamLock Lite

@@ -1,15 +1,16 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { openDB } from "idb";
 
 const Navbar = () => {
   return (
     <div>
-      <div class="w-full p-2.5 flex flex-wrap text-lg font-medium">
+      <div className="w-full p-2.5 flex flex-wrap text-lg font-medium">
         <img src="/assets/icon.svg" alt="icon" />
         ExamLock Lite
-        <span class="flex-auto"></span>
+        <span className="flex-auto"></span>
         <button id="profile">
           <img
-            class="h-8"
+            className="h-8"
             src="https://www.svgrepo.com/show/23012/profile-user.svg"
             alt="profile-icon"
           />
@@ -21,53 +22,225 @@ const Navbar = () => {
 };
 
 function Recording() {
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action === "save-video") {
-      console.log("video saved !!!");
-      console.log(message.recordings);
-      sendResponse("message received by DB saver");
-    }
+  const [recordings, setRecordings] = useState([]);
+  const screenRecorderRef = useRef(null);
+  const webcamRecorderRef = useRef(null);
+  const screenStreamRef = useRef(null);
+  const webcamStreamRef = useRef(null);
+
+  const dbPromise = openDB("recordings-db", 1, {
+    upgrade(db) {
+      db.createObjectStore("recordings", {
+        keyPath: "id",
+        autoIncrement: true,
+      });
+    },
   });
 
-  const Persons = [
-    "Recording 1",
-    "Recording 2",
-    "Recording 3",
-    "Recording 4",
-    "Recording 5",
-    "Recording 6",
-    "Recording 7",
-    "Recording 8",
-    "Recording 9",
-    "Recording 10",
-  ];
+  const save = async (filename, filedata) => {
+    const db = await dbPromise;
+    const blob = new Blob(filedata, { type: "video/webm" });
+    await db.add("recordings", {
+      name: filename,
+      video: blob,
+      timestamp: new Date(),
+    });
+    console.log(`Saved recording: ${filename}`);
+    loadRecordings();
+  };
+
+  const loadRecordings = async () => {
+    const db = await dbPromise;
+    const tx = db.transaction("recordings", "readonly");
+    const store = tx.objectStore("recordings");
+    const allRecordings = await store.getAll();
+    setRecordings(allRecordings);
+  };
+
+  const downloadRecording = (recording) => {
+    const url = URL.createObjectURL(recording.video);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${recording.name}.webm`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onAccessApproved = (screenStream, webcamStream) => {
+    screenStreamRef.current = screenStream;
+    webcamStreamRef.current = webcamStream;
+
+    screenRecorderRef.current = new MediaRecorder(screenStream);
+    webcamRecorderRef.current = new MediaRecorder(webcamStream);
+
+    // let videoPreview = document.getElementById("videoPreview");
+    // videoPreview.srcObject = webcamStream;
+
+    screenRecorderRef.current.start();
+    webcamRecorderRef.current.start();
+
+    const screenBlobs = [];
+    const webcamBlobs = [];
+
+    screenRecorderRef.current.ondataavailable = function (event) {
+      screenBlobs.push(event.data);
+    };
+
+    webcamRecorderRef.current.ondataavailable = function (event) {
+      webcamBlobs.push(event.data);
+    };
+
+    screenRecorderRef.current.onstop = function () {
+      if (screenStreamRef.current) {
+        screenStreamRef.current.getTracks().forEach((track) => {
+          if (track.readyState === "live") {
+            track.stop();
+          }
+        });
+      }
+      // const timestamp = new Date().toISOString();
+      save(`screen-recording - ${Date()}`, screenBlobs);
+    };
+
+    webcamRecorderRef.current.onstop = function () {
+      if (webcamStreamRef.current) {
+        webcamStreamRef.current.getTracks().forEach((track) => {
+          if (track.readyState === "live") {
+            track.stop();
+          }
+        });
+      }
+      // const timestamp = new Date().toISOString();
+      save(`webcam-recording - ${Date()}`, webcamBlobs);
+    };
+  };
+
+  const startVideo = () => {
+    getPermissions();
+  };
+
+  const stopVideo = () => {
+    if (screenRecorderRef.current) screenRecorderRef.current.stop();
+    if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => {
+        if (track.readyState === "live") {
+          track.stop();
+        }
+      });
+    }
+
+    if (webcamStreamRef.current) {
+      webcamStreamRef.current.getTracks().forEach((track) => {
+        if (track.readyState === "live") {
+          track.stop();
+        }
+      });
+    }
+  };
+
+  const getPermissions = () => {
+    navigator.mediaDevices
+      .getDisplayMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          channelCount: 2,
+        },
+        video: {
+          width: 999999999,
+          height: 999999999,
+          displaySurface: "monitor",
+        },
+      })
+      .then((screenStream) => {
+        navigator.mediaDevices
+          .getUserMedia({
+            audio: true,
+            video: true,
+          })
+          .then((webcamStream) => {
+            onAccessApproved(screenStream, webcamStream);
+            setTimeout(() => {
+              console.log(
+                `${
+                  screenStream.getVideoTracks()[0].getSettings().displaySurface
+                }`
+              );
+              console.log(
+                `webcam audio: ${webcamStream.getAudioTracks().length}`
+              );
+              console.log(
+                `screen audio: ${screenStream.getAudioTracks().length}`
+              );
+            }, 2000);
+          });
+      });
+  };
+
+  useEffect(() => {
+    loadRecordings();
+  }, []);
+
   return (
     <div>
+      <style>{`
+      #recording-list li {
+      padding: 0 5px;
+      font-size: medium;
+      color: #4f4f4f;
+      }
+
+      #recording-list li:hover {
+        color: #209e91;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+      }
+    `}</style>
       <Navbar />
-      <div class="flex justify-center my-3 content">
-        <div class="h-56 overflow-hidden w-11/12 border rounded">
+      <div className="flex justify-center my-3 content">
+        <div className="h-60 overflow-hidden w-10/12 border rounded">
           <h6
-            class="flex flex-start text-lg font-semibold px-1 py-1"
+            className="flex flex-start text-lg font-semibold px-1 py-1"
             id="rec-header"
           >
             Your Recordings
           </h6>
           <hr />
-          <div className="h-48 overflow-scroll">
-            <ul class="px-1" id="recording-list">
-              {Persons.map((person, index) => (
-                <React.Fragment key={index}>
-                  <li className="py-1">{person}</li>
+          <div className="h-52 overflow-scroll">
+            <ul className="px-1 text-center" id="recording-list">
+              {recordings.map((recording, index) => (
+                <li key={index} onClick={() => downloadRecording(recording)}>
+                  {recording.name}
                   <hr />
-                </React.Fragment>
+                </li>
               ))}
             </ul>
           </div>
         </div>
       </div>
-      <button className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50">
-        Resync
-      </button>
+      <div className="w-full flex justify-center my-6">
+        <button
+          className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50"
+          onClick={startVideo}
+        >
+          Start Rec
+        </button>
+        <button
+          className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50"
+          onClick={stopVideo}
+        >
+          Stop Rec
+        </button>
+        <button className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50">
+          Resync
+        </button>
+      </div>
+      <div className="w-full">
+        {/* <video id="videoPreview" muted autoPlay width={300}></video> */}
+      </div>
     </div>
   );
 }

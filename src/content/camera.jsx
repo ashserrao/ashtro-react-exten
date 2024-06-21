@@ -3,8 +3,6 @@ import { PopupContext } from "./Contentstate";
 
 function Camera() {
   const { isOpen, isRec, toggleRec } = useContext(PopupContext);
-
-  const [recStatus, setRecStatus] = useState(false);
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioDevices, setAudioDevices] = useState([]);
   const [videoDeviceId, setVideoDeviceId] = useState("");
@@ -49,7 +47,7 @@ function Camera() {
       action: "save-video",
       recording: recordings,
     };
-    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+    if (chrome && chrome.runtime && chrome.runme.sendMessage) {
       chrome.runtime.sendMessage(message, (response) => {
         console.log(response);
       });
@@ -194,7 +192,7 @@ function Camera() {
       className={isOpen ? "content-open" : "content-close"}
       style={{
         width: isOpen ? "300px" : "0",
-        height: isOpen ? "400px" : "0",
+        height: isOpen ? "350px" : "0",
         overflow: "hidden",
         transition: "width 0.4s ease, height 0.4s ease",
       }}
@@ -223,7 +221,7 @@ function Camera() {
           border-radius: 10px;
         }
         .start-button {
-          margin: 10px 0 20px 30px;
+          margin: 20px 0 20px 30px;
           color: #fff;
           background-color: #0d9488;
           padding: 5px;
@@ -265,10 +263,10 @@ function Camera() {
         }
       `}</style>
       <video id="videoPreview" muted autoPlay width={300}></video>
-      <select
+      {/* <select
         id="videoDevices"
         className="videoDevices"
-        disabled={recStatus}
+        disabled={isRec}
         onChange={updateDevice}
       >
         {videoDevices.map((device, index) => (
@@ -280,7 +278,7 @@ function Camera() {
       <select
         id="audioDevices"
         className="audioDevices"
-        disabled={recStatus}
+        disabled={isRec}
         onChange={updateDevice}
       >
         {audioDevices.map((device, index) => (
@@ -288,7 +286,7 @@ function Camera() {
             {device.label || `Mic ${index + 1}`}
           </option>
         ))}
-      </select>
+      </select> */}
       <button className="start-button" onClick={isRec ? stopVideo : startVideo}>
         {isRec ? "Stop Proctoring" : "Start Proctoring"}
       </button>
