@@ -57,7 +57,7 @@ function Facescan() {
       console.log("Response from background script:", response);
     });
     switchback();
-    // window.location = "./recording.html";
+    window.location = "./recording.html";
   };
 
   return (

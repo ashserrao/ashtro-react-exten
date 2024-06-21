@@ -1,6 +1,9 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
+import { PopupContext } from "./Contentstate";
 
 function Camera() {
+  const { isOpen, isRec, toggleRec } = useContext(PopupContext);
+
   const [recStatus, setRecStatus] = useState(false);
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioDevices, setAudioDevices] = useState([]);
@@ -57,22 +60,10 @@ function Camera() {
 
   const startVideo = () => {
     getPermissions();
-    setTimeout(() => {
-      let message = {
-        action: "recording-page",
-      };
-      if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-        chrome.runtime.sendMessage(message, (response) => {
-          console.log("recording page opened", response);
-        });
-      } else {
-        console.log("Chrome runtime not available");
-      }
-    }, 10000);
   };
 
   const stopVideo = () => {
-    setRecStatus(false);
+    toggleRec();
     if (screenRecorderRef.current) screenRecorderRef.current.stop();
     if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
 
@@ -94,8 +85,7 @@ function Camera() {
   };
 
   const onAccessApproved = (screenStream, webcamStream) => {
-    setRecStatus(!recStatus);
-
+    toggleRec();
     screenStreamRef.current = screenStream;
     webcamStreamRef.current = webcamStream;
 
@@ -144,9 +134,8 @@ function Camera() {
       console.log(blobs.webcam);
       recordings.push(blobs.webcam);
       setTimeout(() => {
-      saveVideos();
-      }, 5000)
-
+        saveVideos();
+      }, 5000);
     };
   };
 
@@ -201,7 +190,15 @@ function Camera() {
   };
 
   return (
-    <div>
+    <div
+      className={isOpen ? "content-open" : "content-close"}
+      style={{
+        width: isOpen ? "300px" : "0",
+        height: isOpen ? "400px" : "0",
+        overflow: "hidden",
+        transition: "width 0.4s ease, height 0.4s ease",
+      }}
+    >
       <style>{`
         .videoDevices, .audioDevices {
           margin: 10px 0 10px 20px;
@@ -226,7 +223,7 @@ function Camera() {
           border-radius: 10px;
         }
         .start-button {
-          margin: 10px 0 0px 30px;
+          margin: 10px 0 20px 30px;
           color: #fff;
           background-color: #0d9488;
           padding: 5px;
@@ -235,6 +232,36 @@ function Camera() {
           border-width: 0;
           border-radius: 5px;
           width: 80%;
+        }
+        .start-button:focus{
+         outline: none;
+        }
+        .close-button {
+          margin: 10px 0 20px 30px;
+          color: #fff;
+          background-color: #F13939;
+          padding: 5px;
+          font-size: 16px;
+          font-weight: 500;
+          border-width: 0;
+          border-radius: 5px;
+          width: 80%;
+          outline: none
+        }
+        .close-button:focus{
+         outline: none;
+        }
+        .-content-close {
+          display: none;
+          height: 0;
+          width: 0;
+          overflow: hidden; /* Ensure the content does not overflow during transition */
+          transition: height 0.4s ease, width 0.4s ease;
+        }
+        .content-open{
+          display: block; /* Display the container */
+          height: 200px; /* Replace with the actual height */
+          width: 300px; /* Replace with the actual width */
         }
       `}</style>
       <video id="videoPreview" muted autoPlay width={300}></video>
@@ -262,11 +289,8 @@ function Camera() {
           </option>
         ))}
       </select>
-      <button
-        className="start-button"
-        onClick={recStatus ? stopVideo : startVideo}
-      >
-        {recStatus ? "Stop Proctoring" : "Start Proctoring"}
+      <button className="start-button" onClick={isRec ? stopVideo : startVideo}>
+        {isRec ? "Stop Proctoring" : "Start Proctoring"}
       </button>
     </div>
   );

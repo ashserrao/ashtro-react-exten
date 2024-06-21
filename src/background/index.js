@@ -19,12 +19,12 @@ console.log("background.js is working");
 // On message actions ================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "recording-page") {
-    chrome.windows.create({
-      url: "chrome-extension://" + chrome.runtime.id + "/recording.html",
-      type: "popup",
-      width: 690,
-      height: 750,
-    });
+    // chrome.windows.create({
+    //   url: "chrome-extension://" + chrome.runtime.id + "/recording.html",
+    //   type: "popup",
+    //   width: 690,
+    //   height: 750,
+    // });
   } else if (
     message.action === "id-cards" ||
     message.action === "face-capture"

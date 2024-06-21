@@ -1,18 +1,23 @@
-import React, { useEffect } from "react";
-import Camera from "./camera";
+import React, { useContext, useEffect } from "react";
+import Camera from "./Camera";
+import Minified from "./Minified";
+import { PopupContext } from "./Contentstate";
 
-function Content(togglepopup) {
-  // Destructure togglepopup from props
+function Content() {
+  const { isOpen, togglePopup } = useContext(PopupContext);
+
   const containerStyle = {
     position: "fixed",
-    width: "300px",
-    height: "450px",
+    width: "fit-content",
+    height: "fit-content",
+    // background: "rgba(255, 255, 255, 0.3)",
     backgroundColor: "#F6F5F2",
     zIndex: 999999,
-    top: "10px",
-    right: "10px",
+    bottom: "10px",
+    left: "10px",
     borderRadius: "10px",
     cursor: "move",
+    fontFamily: "'Roboto', sans-serif",
   };
 
   useEffect(() => {
@@ -30,14 +35,21 @@ function Content(togglepopup) {
     canvas.style.pointerEvents = "none"; // Allow clicks to pass through
     document.body.appendChild(canvas);
 
+    const updateCanvasSize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener("resize", updateCanvasSize);
+
     const draggableDiv = document.getElementById("draggableDiv");
 
     if (draggableDiv) {
-      draggableDiv.onmousedown = function (event) {
+      const handleMouseDown = (event) => {
         let shiftX = event.clientX - draggableDiv.getBoundingClientRect().left;
         let shiftY = event.clientY - draggableDiv.getBoundingClientRect().top;
 
-        function moveAt(pageX, pageY) {
+        const moveAt = (pageX, pageY) => {
           // Calculate new positions
           let newLeft = pageX - shiftX;
           let newTop = pageY - shiftY;
@@ -45,47 +57,53 @@ function Content(togglepopup) {
           // Boundary checks
           if (newLeft < 0) newLeft = 0;
           if (newTop < 0) newTop = 0;
-          if (newLeft + draggableDiv.offsetWidth > canvas.width)
-            newLeft = canvas.width - draggableDiv.offsetWidth;
-          if (newTop + draggableDiv.offsetHeight > canvas.height)
-            newTop = canvas.height - draggableDiv.offsetHeight;
+          if (newLeft + draggableDiv.offsetWidth > window.innerWidth)
+            newLeft = window.innerWidth - draggableDiv.offsetWidth;
+          if (newTop + draggableDiv.offsetHeight > window.innerHeight)
+            newTop = window.innerHeight - draggableDiv.offsetHeight;
 
           // Set new positions
           draggableDiv.style.left = newLeft + "px";
           draggableDiv.style.top = newTop + "px";
-        }
+        };
 
-        function onMouseMove(event) {
+        const handleMouseMove = (event) => {
           moveAt(event.pageX, event.pageY);
-        }
-
-        // Move the div when the mouse moves
-        document.addEventListener("mousemove", onMouseMove);
-
-        // Remove the mousemove listener when the mouse button is released
-        document.onmouseup = function () {
-          document.removeEventListener("mousemove", onMouseMove);
-          document.onmouseup = null;
         };
 
-        // Prevent default dragging of the element
-        draggableDiv.ondragstart = function () {
-          return false;
+        document.addEventListener("mousemove", handleMouseMove);
+
+        const handleMouseUp = () => {
+          document.removeEventListener("mousemove", handleMouseMove);
+          document.removeEventListener("mouseup", handleMouseUp);
         };
+
+        document.addEventListener("mouseup", handleMouseUp);
+
+        draggableDiv.ondragstart = () => false;
+      };
+
+      draggableDiv.addEventListener("mousedown", handleMouseDown);
+
+      return () => {
+        draggableDiv.removeEventListener("mousedown", handleMouseDown);
       };
     }
 
-    // Clean up the event listeners and canvas on component unmount
     return () => {
-      if (draggableDiv) {
-        draggableDiv.onmousedown = null;
-      }
       document.body.removeChild(canvas);
+      window.removeEventListener("resize", updateCanvasSize);
     };
-  }, []);
+  }, [isOpen, togglePopup]);
 
   return (
-    <div id="draggableDiv" style={containerStyle}>
+    <div
+      id="draggableDiv"
+      style={{
+        ...containerStyle,
+      }}
+    >
+      <Minified />
       <Camera />
     </div>
   );

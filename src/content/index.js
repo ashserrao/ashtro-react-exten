@@ -1,18 +1,16 @@
-import React, { useState } from "react";
+console.log("content.js is injected");
+
+import React, { useContext } from "react";
 import ReactDOM from "react-dom";
 import "../index.css";
-import Content from "./Content";
+import Content from "./content";
+import { StateProvider } from "./Contentstate";
 
-let togglepopup = false;
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "trigger") {
-    Trigger();
-  }
-});
+setTimeout(() => {
+  Trigger();
+}, 3000);
 
 function Trigger() {
-  togglepopup = !togglepopup;
   let rootElement = document.getElementById("root");
   // Create the root element if it doesn't exist
   if (!rootElement) {
@@ -23,9 +21,9 @@ function Trigger() {
 
   ReactDOM.render(
     <React.StrictMode>
-      <div style={{ visibility: togglepopup ? "visible" : "hidden" }}>
-        <Content togglepopup={togglepopup} />
-      </div>
+      <StateProvider>
+        <Content />
+      </StateProvider>
     </React.StrictMode>,
     rootElement
   );
