@@ -20,4 +20,4 @@ To run the build files go to manage extensions.\
     1. Go to manage extensions.\
     2. Enable developer mode.\
     3. Click on load unpacked.\
-    4. Select the build folder.\
+    4. Select the build folder.
