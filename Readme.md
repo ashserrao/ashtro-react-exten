@@ -11,7 +11,7 @@ This is a chrome extension that helps in exam security.
 ## To run the project
 
 ### `npm install`
-To add the node modules.\
+To add the node modules.
 
 ### `npm run build`
 To build the project files.\
