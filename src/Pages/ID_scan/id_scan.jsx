@@ -148,8 +148,14 @@ function Idscan() {
           <div className="flex flex-wrap w-full">
             <div className="flex flex-wrap">
               {images.map((src, index) => (
-                <div key={index} className="w-fit my-2 mx-4 p-2 border">
-                  <h1>{`Image ${index + 1}`}</h1>
+                <div
+                  key={index}
+                  className="flex text-center my-2 mx-4 p-2 border"
+                  style={{ flexDirection: "column" }}
+                >
+                  <h1 className="w-full text-medium font-semibold">{`Image ${
+                    index + 1
+                  }`}</h1>
                   <img
                     onClick={() => openViewModal(src)}
                     src={src}
@@ -222,6 +228,7 @@ function Idscan() {
         ariaHideApp={false}
         style={{
           content: {
+            width: "40%",
             top: "50%",
             left: "50%",
             right: "auto",

@@ -643,11 +643,6 @@ video {
 .w-auto {
   width: auto;
 }
-.w-fit {
-  width: -webkit-fit-content;
-  width: -moz-fit-content;
-  width: fit-content;
-}
 .w-full {
   width: 100%;
 }

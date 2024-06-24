@@ -30,14 +30,14 @@ function Trigger() {
   return true;
 }
 
-//disable content selection=================================
-function disableSelection() {
-  document.addEventListener("selectstart", disableEvent);
-  document.addEventListener("mousedown", disableEvent);
-}
+// //disable content selection=================================
+// function disableSelection() {
+//   document.addEventListener("selectstart", disableEvent);
+//   document.addEventListener("mousedown", disableEvent);
+// }
 
-function disableEvent(event) {
-  event.preventDefault();
-}
+// function disableEvent(event) {
+//   event.preventDefault();
+// }
 
-disableSelection();
+// disableSelection();
