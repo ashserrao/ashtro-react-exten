@@ -22,6 +22,8 @@ const Navbar = () => {
 };
 
 function Recording() {
+  const [recStatus, setRecStatus] = useState(null);
+  const [isRec, setIsRec] = useState(false);
   const [recordings, setRecordings] = useState([]);
   const screenRecorderRef = useRef(null);
   const webcamRecorderRef = useRef(null);
@@ -45,7 +47,6 @@ function Recording() {
       video: blob,
       timestamp: new Date(),
     });
-    console.log(`Saved recording: ${filename}`);
     loadRecordings();
   };
 
@@ -73,9 +74,6 @@ function Recording() {
     screenRecorderRef.current = new MediaRecorder(screenStream);
     webcamRecorderRef.current = new MediaRecorder(webcamStream);
 
-    // let videoPreview = document.getElementById("videoPreview");
-    // videoPreview.srcObject = webcamStream;
-
     screenRecorderRef.current.start();
     webcamRecorderRef.current.start();
 
@@ -98,7 +96,6 @@ function Recording() {
           }
         });
       }
-      // const timestamp = new Date().toISOString();
       save(`screen-recording - ${Date()}`, screenBlobs);
     };
 
@@ -110,7 +107,6 @@ function Recording() {
           }
         });
       }
-      // const timestamp = new Date().toISOString();
       save(`webcam-recording - ${Date()}`, webcamBlobs);
     };
   };
@@ -162,20 +158,15 @@ function Recording() {
           })
           .then((webcamStream) => {
             onAccessApproved(screenStream, webcamStream);
-            setTimeout(() => {
-              console.log(
-                `${
-                  screenStream.getVideoTracks()[0].getSettings().displaySurface
-                }`
-              );
-              console.log(
-                `webcam audio: ${webcamStream.getAudioTracks().length}`
-              );
-              console.log(
-                `screen audio: ${screenStream.getAudioTracks().length}`
-              );
-            }, 2000);
+          })
+          .catch((err) => {
+            console.log(err);
+            setIsRec(false);
           });
+      })
+      .catch((err) => {
+        console.log(err);
+        setIsRec(false);
       });
   };
 
@@ -238,9 +229,7 @@ function Recording() {
           Resync
         </button>
       </div>
-      <div className="w-full">
-        {/* <video id="videoPreview" muted autoPlay width={300}></video> */}
-      </div>
+      <div className="w-full"></div>
     </div>
   );
 }

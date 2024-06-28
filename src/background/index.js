@@ -1,30 +1,14 @@
 let Images = [];
 let previousTabId = null;
+let recStatus = false;
 
 console.log("background.js is working");
-
-// Uncomment this section if you want to add an action when the browser icon is clicked
-// chrome.action.onClicked.addListener((tab) => {
-//   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-//     let activeTab = tabs[0];
-//     let message = {
-//       action: "trigger",
-//     };
-//     chrome.tabs.sendMessage(activeTab.id, message, (response) => {
-//       console.log("bg working");
-//     });
-//   });
-// });
 
 // On message actions ================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "recording-page") {
-    // chrome.windows.create({
-    //   url: "chrome-extension://" + chrome.runtime.id + "/recording.html",
-    //   type: "popup",
-    //   width: 690,
-    //   height: 750,
-    // });
+    openRecPage();
+    sendResponse("page triggered");
   } else if (
     message.action === "id-cards" ||
     message.action === "face-capture"
@@ -43,6 +27,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   } else if (message.action === "switch-tab") {
     switchBackToPreviousTab();
     sendResponse("switched-tab");
+  } else if (message.action === "check-recording-status") {
+    // recStatus = message.data;
+    sendResponse(recStatus);
+  } else if (message.action === "switch-recording-status") {
+    openRecPage();
+    // recStatus = message.data;
+    console.log(recStatus);
   }
 });
 
@@ -71,4 +62,18 @@ function switchBackToPreviousTab() {
       }
     });
   }
+}
+
+function openRecPage() {
+  const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
+
+  chrome.tabs.query({ url: url }, function (tabs) {
+    if (tabs.length > 0) {
+      // If the tab is found, make it the active tab
+      chrome.tabs.update(tabs[0].id, { active: true });
+    } else {
+      // If the tab is not found, create a new tab
+      chrome.tabs.create({ url: url });
+    }
+  });
 }

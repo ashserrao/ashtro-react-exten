@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef, useContext } from "react";
 import { PopupContext } from "./Contentstate";
 
 function Camera() {
-  const { isOpen, isRec, toggleRec } = useContext(PopupContext);
+  const { isOpen, isRec, togglePopup, toggleRec } = useContext(PopupContext);
+  const [Preview, setPreview] = useState(false);
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioDevices, setAudioDevices] = useState([]);
   const [videoDeviceId, setVideoDeviceId] = useState("");
@@ -17,14 +18,6 @@ function Camera() {
   useEffect(() => {
     getDevices();
   }, []);
-
-  const updateDevice = () => {
-    const videoSelect = document.getElementById("videoDevices");
-    const audioSelect = document.getElementById("audioDevices");
-
-    setVideoDeviceId(videoSelect.value);
-    setAudioDeviceId(audioSelect.value);
-  };
 
   const getDevices = () => {
     navigator.mediaDevices
@@ -42,18 +35,31 @@ function Camera() {
       .catch((err) => console.error("Error getting media devices: ", err));
   };
 
-  const saveVideos = () => {
+  const startRecording = () => {
+    toggleRec();
+    // Trigger to start video in rec page =============================
+    chrome.storage.local.set({ recTrigger: "startRec" }, function () {
+      console.log("Value is set to " + "startRec");
+    });
+    // Trigger for rec page=============================
     let message = {
-      action: "save-video",
-      recording: recordings,
+      action: "recording-page",
+      data: true,
     };
-    if (chrome && chrome.runtime && chrome.runme.sendMessage) {
-      chrome.runtime.sendMessage(message, (response) => {
-        console.log(response);
-      });
-    } else {
-      console.log("Chrome runtime not available");
-    }
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log(response);
+    });
+  };
+
+  const stopRecording = () => {
+    toggleRec();
+    let message = {
+      action: "recording-page",
+      data: true,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log(response);
+    });
   };
 
   const startVideo = () => {
@@ -61,7 +67,7 @@ function Camera() {
   };
 
   const stopVideo = () => {
-    toggleRec();
+    setPreview(!Preview);
     if (screenRecorderRef.current) screenRecorderRef.current.stop();
     if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
 
@@ -82,18 +88,15 @@ function Camera() {
     }
   };
 
-  const onAccessApproved = (screenStream, webcamStream) => {
-    toggleRec();
-    screenStreamRef.current = screenStream;
+  const onAccessApproved = (webcamStream) => {
+    setPreview(!Preview);
     webcamStreamRef.current = webcamStream;
 
-    screenRecorderRef.current = new MediaRecorder(screenStream);
     webcamRecorderRef.current = new MediaRecorder(webcamStream);
 
     let videoPreview = document.getElementById("videoPreview");
     videoPreview.srcObject = webcamStream;
 
-    screenRecorderRef.current.start();
     webcamRecorderRef.current.start();
 
     const blobs = {
@@ -101,24 +104,8 @@ function Camera() {
       webcam: [],
     };
 
-    screenRecorderRef.current.ondataavailable = function (event) {
-      blobs.screen.push(event.data);
-    };
-
     webcamRecorderRef.current.ondataavailable = function (event) {
       blobs.webcam.push(event.data);
-    };
-
-    screenRecorderRef.current.onstop = function () {
-      if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((track) => {
-          if (track.readyState === "live") {
-            track.stop();
-          }
-        });
-      }
-      console.log(blobs.screen);
-      recordings.push(blobs.screen);
     };
 
     webcamRecorderRef.current.onstop = function () {
@@ -138,52 +125,21 @@ function Camera() {
   };
 
   const getPermissions = () => {
+    const constraints = {
+      video: {
+        deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+      },
+      audio: {
+        deviceId: audioDeviceId ? { exact: audioDeviceId } : undefined,
+      },
+    };
     navigator.mediaDevices
-      .getDisplayMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          channelCount: 2,
-        },
-        video: {
-          width: 999999999,
-          height: 999999999,
-          displaySurface: "monitor",
-        },
-      })
-      .then((screenStream) => {
-        const constraints = {
-          video: {
-            deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
-          },
-          audio: {
-            deviceId: audioDeviceId ? { exact: audioDeviceId } : undefined,
-          },
-        };
-        navigator.mediaDevices
-          .getUserMedia(constraints)
-          .then((webcamStream) => {
-            onAccessApproved(screenStream, webcamStream);
-            setTimeout(() => {
-              console.log(
-                `${
-                  screenStream.getVideoTracks()[0].getSettings().displaySurface
-                }`
-              );
-              console.log(
-                `webcam audio: ${webcamStream.getAudioTracks().length}`
-              );
-              console.log(
-                `screen audio: ${screenStream.getAudioTracks().length}`
-              );
-            }, 2000);
-          })
-          .catch((error) => {
-            console.log("error accessing webcam", error);
-          });
+      .getUserMedia(constraints)
+      .then((webcamStream) => {
+        onAccessApproved(webcamStream);
       })
       .catch((error) => {
-        console.log("error starting screen recording", error);
+        console.log("error accessing webcam", error);
       });
   };
 
@@ -220,8 +176,8 @@ function Camera() {
         #videoPreview {
           border-radius: 10px;
         }
-        .start-button {
-          margin: 20px 0 20px 30px;
+        .prv-button {
+          margin: 20px 0 10px 30px;
           color: #fff;
           background-color: #0d9488;
           padding: 5px;
@@ -231,13 +187,13 @@ function Camera() {
           border-radius: 5px;
           width: 80%;
         }
-        .start-button:focus{
+        .prv-button:focus{
          outline: none;
         }
-        .close-button {
+        .start-button {
           margin: 10px 0 20px 30px;
           color: #fff;
-          background-color: #F13939;
+          background-color: #0d9488;
           padding: 5px;
           font-size: 16px;
           font-weight: 500;
@@ -246,7 +202,7 @@ function Camera() {
           width: 80%;
           outline: none
         }
-        .close-button:focus{
+        .start-button:focus{
          outline: none;
         }
         .-content-close {
@@ -263,32 +219,14 @@ function Camera() {
         }
       `}</style>
       <video id="videoPreview" muted autoPlay width={300}></video>
-      {/* <select
-        id="videoDevices"
-        className="videoDevices"
-        disabled={isRec}
-        onChange={updateDevice}
+      <button className="prv-button" onClick={Preview ? stopVideo : startVideo}>
+        {Preview ? "Stop Preview" : "Check Camera Preview"}
+      </button>
+      <button
+        className="start-button"
+        onClick={isRec ? stopRecording : startRecording}
       >
-        {videoDevices.map((device, index) => (
-          <option key={index} value={device.deviceId}>
-            {device.label || `Camera ${index + 1}`}
-          </option>
-        ))}
-      </select>
-      <select
-        id="audioDevices"
-        className="audioDevices"
-        disabled={isRec}
-        onChange={updateDevice}
-      >
-        {audioDevices.map((device, index) => (
-          <option key={index} value={device.deviceId}>
-            {device.label || `Mic ${index + 1}`}
-          </option>
-        ))}
-      </select> */}
-      <button className="start-button" onClick={isRec ? stopVideo : startVideo}>
-        {isRec ? "Stop Proctoring" : "Start Proctoring"}
+        {isRec ? "Stop Recording" : "Start Recording"}
       </button>
     </div>
   );
