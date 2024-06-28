@@ -156,22 +156,23 @@ function Camera() {
       });
   };
 
-    // const handleRecordingStatus = () => {
-    //   chrome.storage.local.get(["timerStatus"], function (result) {
-    //     if (result.timerStatus === "start") {
-    //       toggleRec();
-    //       chrome.storage.local.set({ timerStatus: " " }, function () {
-    //         console.log("Value is set to " + " ");
-    //       });
-    //     } else if (result.timerStatus === "stop") {
-    //       toggleRec();
-    //     }
-    //   });
-    // };
+    const handleRecordingStatus = () => {
+      chrome.storage.local.get(["timerStatus"], function (result) {
+        if (result.timerStatus === "stop" && isRec === true) {
+          toggleRec();
+          chrome.storage.local.set({ timerStatus: " " }, function () {
+            console.log("Value is set to " + " ");
+          });
+        }
+        // console.log("mouse moved");
+      });
+    };
 
-    // setInterval(() => {
-    //   handleRecordingStatus();
-    // }, 1000);
+  // trigger function on event;
+  window.addEventListener("mousemove", function(){
+    // console.log("mouse moved");
+    handleRecordingStatus();
+  });
 
   return (
     <div

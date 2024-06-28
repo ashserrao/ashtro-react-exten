@@ -70,7 +70,7 @@ function Recording() {
     chrome.storage.local.set(
       { recTrigger: " ", recStatus: "isRec", timerStatus: "start" },
       function () {
-        console.log("Value is set to " + "startRec");
+        // console.log("Value is set to " + "startRec");
       }
     );
     accessApproval.current = false;
@@ -120,9 +120,9 @@ function Recording() {
   const startVideo = () => {
     getPermissions();
     chrome.storage.local.set(
-      { recTrigger: "startRec", recStatus: "isNotRec", timerStatus: "stop" },
+      { recTrigger: "startRec", recStatus: "isNotRec", timerStatus: "start" },
       function () {
-        console.log("Value is set to " + "startRec");
+        // console.log("Value is set to " + "startRec");
       }
     );
     accessApproval.current = true;
@@ -130,9 +130,9 @@ function Recording() {
 
   const stopVideo = () => {
     chrome.storage.local.set(
-      { recTrigger: "stopRec", recStatus: "isNotRec",  },
+      { recTrigger: "stopRec", recStatus: "isNotRec", timerStatus: "stop" },
       function () {
-        console.log("Value is set to " + "stopRec");
+        // console.log("Value is set to " + "stopRec");
       }
     );
     if (screenRecorderRef.current) screenRecorderRef.current.stop();
@@ -180,18 +180,19 @@ function Recording() {
           })
           .catch((err) => {
             console.log(err);
-            setIsRec(false);
           });
       })
       .catch((err) => {
         console.log(err);
-        setIsRec(false);
       });
   };
 
   useEffect(() => {
     loadRecordings();
-    window.addEventListener("beforeunload", stopVideo);
+    const handleBeforeUnload = () => {
+      stopVideo();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   const handleRecordingStatus = () => {
@@ -202,16 +203,12 @@ function Recording() {
         accessApproval.current === false
       ) {
         startVideo();
-        console.log("case 1");
       } else if (
         result.recTrigger === "startRec" &&
         result.recStatus === "isNotRec" &&
         accessApproval.current === true
       ) {
-        console.log("To be approved");
       } else if (result.recTrigger === " " && result.recStatus === "isRec") {
-        console.log("rec ongoing");
-        console.log("case 3");
       } else if (
         result.recTrigger === "stopRec" &&
         result.recStatus === "isRec"
