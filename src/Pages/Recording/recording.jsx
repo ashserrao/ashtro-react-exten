@@ -22,8 +22,7 @@ const Navbar = () => {
 };
 
 function Recording() {
-  const [recStatus, setRecStatus] = useState(null);
-  const [isRec, setIsRec] = useState(false);
+  const accessApproval = useRef(false);
   const [recordings, setRecordings] = useState([]);
   const screenRecorderRef = useRef(null);
   const webcamRecorderRef = useRef(null);
@@ -68,6 +67,13 @@ function Recording() {
   };
 
   const onAccessApproved = (screenStream, webcamStream) => {
+    chrome.storage.local.set(
+      { recTrigger: " ", recStatus: "isRec", timerStatus: "start" },
+      function () {
+        console.log("Value is set to " + "startRec");
+      }
+    );
+    accessApproval.current = false;
     screenStreamRef.current = screenStream;
     webcamStreamRef.current = webcamStream;
 
@@ -113,9 +119,22 @@ function Recording() {
 
   const startVideo = () => {
     getPermissions();
+    chrome.storage.local.set(
+      { recTrigger: "startRec", recStatus: "isNotRec", timerStatus: "stop" },
+      function () {
+        console.log("Value is set to " + "startRec");
+      }
+    );
+    accessApproval.current = true;
   };
 
   const stopVideo = () => {
+    chrome.storage.local.set(
+      { recTrigger: "stopRec", recStatus: "isNotRec",  },
+      function () {
+        console.log("Value is set to " + "stopRec");
+      }
+    );
     if (screenRecorderRef.current) screenRecorderRef.current.stop();
     if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
 
@@ -172,7 +191,39 @@ function Recording() {
 
   useEffect(() => {
     loadRecordings();
+    window.addEventListener("beforeunload", stopVideo);
   }, []);
+
+  const handleRecordingStatus = () => {
+    chrome.storage.local.get(["recTrigger", "recStatus"], function (result) {
+      if (
+        result.recTrigger === "startRec" &&
+        result.recStatus === "isNotRec" &&
+        accessApproval.current === false
+      ) {
+        startVideo();
+        console.log("case 1");
+      } else if (
+        result.recTrigger === "startRec" &&
+        result.recStatus === "isNotRec" &&
+        accessApproval.current === true
+      ) {
+        console.log("To be approved");
+      } else if (result.recTrigger === " " && result.recStatus === "isRec") {
+        console.log("rec ongoing");
+        console.log("case 3");
+      } else if (
+        result.recTrigger === "stopRec" &&
+        result.recStatus === "isRec"
+      ) {
+        stopVideo();
+      }
+    });
+  };
+
+  setInterval(() => {
+    handleRecordingStatus();
+  }, 1000);
 
   return (
     <div>
@@ -213,7 +264,7 @@ function Recording() {
         </div>
       </div>
       <div className="w-full flex justify-center my-6">
-        <button
+        {/* <button
           className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50"
           onClick={startVideo}
         >
@@ -224,7 +275,7 @@ function Recording() {
           onClick={stopVideo}
         >
           Stop Rec
-        </button>
+        </button> */}
         <button className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50">
           Resync
         </button>

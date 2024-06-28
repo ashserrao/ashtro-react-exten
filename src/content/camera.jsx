@@ -3,6 +3,7 @@ import { PopupContext } from "./Contentstate";
 
 function Camera() {
   const { isOpen, isRec, togglePopup, toggleRec } = useContext(PopupContext);
+  const recStatus = useRef("isNotRec");
   const [Preview, setPreview] = useState(false);
   const [videoDevices, setVideoDevices] = useState([]);
   const [audioDevices, setAudioDevices] = useState([]);
@@ -17,6 +18,9 @@ function Camera() {
 
   useEffect(() => {
     getDevices();
+    chrome.storage.local.set({timerStatus: " "}, function(){
+      console.log("Value is set to " + " ");
+    })
   }, []);
 
   const getDevices = () => {
@@ -38,9 +42,12 @@ function Camera() {
   const startRecording = () => {
     toggleRec();
     // Trigger to start video in rec page =============================
-    chrome.storage.local.set({ recTrigger: "startRec" }, function () {
-      console.log("Value is set to " + "startRec");
-    });
+    chrome.storage.local.set(
+      { recTrigger: "startRec", recStatus: "isNotRec" },
+      function () {
+        console.log("Value is set to " + "startRec");
+      }
+    );
     // Trigger for rec page=============================
     let message = {
       action: "recording-page",
@@ -52,6 +59,12 @@ function Camera() {
   };
 
   const stopRecording = () => {
+    chrome.storage.local.set(
+      { recTrigger: "stopRec" },
+      function () {
+        console.log("Value is set to " + "stopRec");
+      }
+    );
     toggleRec();
     let message = {
       action: "recording-page",
@@ -142,6 +155,23 @@ function Camera() {
         console.log("error accessing webcam", error);
       });
   };
+
+    // const handleRecordingStatus = () => {
+    //   chrome.storage.local.get(["timerStatus"], function (result) {
+    //     if (result.timerStatus === "start") {
+    //       toggleRec();
+    //       chrome.storage.local.set({ timerStatus: " " }, function () {
+    //         console.log("Value is set to " + " ");
+    //       });
+    //     } else if (result.timerStatus === "stop") {
+    //       toggleRec();
+    //     }
+    //   });
+    // };
+
+    // setInterval(() => {
+    //   handleRecordingStatus();
+    // }, 1000);
 
   return (
     <div
