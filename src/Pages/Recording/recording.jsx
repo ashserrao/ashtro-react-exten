@@ -24,6 +24,7 @@ const Navbar = () => {
 function Recording() {
   const accessApproval = useRef(false);
   const [recordings, setRecordings] = useState([]);
+  const battChargeStatusRef = useRef(null);
   const screenRecorderRef = useRef(null);
   const webcamRecorderRef = useRef(null);
   const screenStreamRef = useRef(null);
@@ -163,6 +164,20 @@ function Recording() {
     }
   };
 
+  const pausePlay = () => {
+    if (!screenRecorderRef.current || webcamRecorderRef.current)
+      return console.log("no recording");
+
+    screenRecorderRef.current.stop();
+    webcamRecorderRef.current.stop();
+
+    setTimeout(() => {
+      screenRecorderRef.current.start();
+      webcamRecorderRef.current.start();
+      backupStatus = true;
+    }, 1000);
+  };
+
   const getPermissions = () => {
     navigator.mediaDevices
       .getDisplayMedia({
@@ -226,8 +241,24 @@ function Recording() {
     });
   };
 
+  const handleBatteryStatus = () => {
+    chrome.storage.local.get(["batteryStatus"], function (result) {
+      if (result.batteryStatus !== battChargeStatusRef.current) {
+        if (result.batteryStatus === "low") {
+          alert("Battery is low, please charge your device");
+          result.backupStatus = battChargeStatusRef.current;
+        } else if (result.batteryStatus === "medium") {
+          alert("Battery is medium, please charge your device");
+        } else if (result.backupStatus === " ") {
+          result.backupStatus = battChargeStatusRef.current;
+        }
+      }
+    });
+  };
+
   setInterval(() => {
     handleRecordingStatus();
+    handleBatteryStatus();
   }, 1000);
 
   return (

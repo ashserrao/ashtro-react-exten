@@ -2,6 +2,7 @@ import React, { useContext, useEffect } from "react";
 import Camera from "./Camera";
 import Minified from "./Minified";
 import { PopupContext } from "./Contentstate";
+import Monitoring from "./Monitoring";
 
 function Content() {
   const { isOpen, togglePopup } = useContext(PopupContext);
@@ -104,6 +105,7 @@ function Content() {
     >
       <Minified />
       <Camera />
+      <Monitoring />
     </div>
   );
 }
