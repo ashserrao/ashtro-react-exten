@@ -41,6 +41,7 @@ function Camera() {
 
   const startRecording = () => {
     toggleRec();
+    togglePopup();
     // Trigger to start video in rec page =============================
     chrome.storage.local.set(
       { recTrigger: "startRec", recStatus: "isNotRec" },
@@ -159,7 +160,7 @@ function Camera() {
     const handleRecordingStatus = () => {
       chrome.storage.local.get(["timerStatus"], function (result) {
         if (result.timerStatus === "stop" && isRec === true) {
-          toggleRec();
+          stopRecording();
           chrome.storage.local.set({ timerStatus: " " }, function () {
             console.log("Value is set to " + " ");
           });

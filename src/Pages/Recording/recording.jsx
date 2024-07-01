@@ -73,6 +73,14 @@ function Recording() {
         // console.log("Value is set to " + "startRec");
       }
     );
+    // Trigger for rec page=============================
+    let message = {
+      action: "switch-tab",
+      data: true,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log(response);
+    });
     accessApproval.current = false;
     screenStreamRef.current = screenStream;
     webcamStreamRef.current = webcamStream;

@@ -7,6 +7,7 @@ console.log("background.js is working");
 // On message actions ================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "recording-page") {
+    recordTabId();
     openRecPage();
     sendResponse("page triggered");
   } else if (
