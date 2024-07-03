@@ -1,6 +1,7 @@
 let Images = [];
 let previousTabId = null;
 let recStatus = false;
+let Flags = [];
 
 console.log("background.js is working");
 
@@ -35,6 +36,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     openRecPage();
     // recStatus = message.data;
     console.log(recStatus);
+  } else if (message.action === "getFlags") {
+    if (Flags) {
+      sendResponse(Flags[0]);
+      Flags.shift();
+    }
+  } else if (message.action === "sendFlags"){
+    Flags.push(message.data);
+    sendResponse("Flag received.")
   }
 });
 
@@ -65,6 +74,7 @@ function switchBackToPreviousTab() {
   }
 }
 
+//Trigger recording page =====================================
 function openRecPage() {
   const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
 

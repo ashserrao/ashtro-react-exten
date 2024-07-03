@@ -30,17 +30,51 @@ function Recording() {
   const screenStreamRef = useRef(null);
   const webcamStreamRef = useRef(null);
 
-  const dbPromise = openDB("recordings-db", 1, {
+  const dbVideoPromise = openDB("recordings-db", 1, {
     upgrade(db) {
-      db.createObjectStore("recordings", {
-        keyPath: "id",
-        autoIncrement: true,
-      });
+      if (!db.objectStoreNames.contains("recordings")) {
+        db.createObjectStore("recordings", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+      }
     },
   });
 
+  const dbFlagPromise = openDB("Flags-db", 1, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains("Flags")) {
+        db.createObjectStore("Flags", {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+      }
+    },
+  });
+
+  const saveFlag = async (response) => {
+    const db = await dbFlagPromise;
+    await db.add("Flags", {
+      response,
+    });
+  };
+
+  const addFlags = () => {
+    const message = {
+      action: "getFlags",
+      data: "",
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log("flags received");
+      if (response) {
+        saveFlag(response);
+        console.log(response);
+      }
+    });
+  };
+
   const save = async (filename, filedata) => {
-    const db = await dbPromise;
+    const db = await dbVideoPromise;
     const blob = new Blob(filedata, { type: "video/webm" });
     await db.add("recordings", {
       name: filename,
@@ -51,7 +85,7 @@ function Recording() {
   };
 
   const loadRecordings = async () => {
-    const db = await dbPromise;
+    const db = await dbVideoPromise;
     const tx = db.transaction("recordings", "readonly");
     const store = tx.objectStore("recordings");
     const allRecordings = await store.getAll();
@@ -74,6 +108,16 @@ function Recording() {
         // console.log("Value is set to " + "startRec");
       }
     );
+    let flag = {
+      flag_type: "green",
+      transfer_to: "Don''t Transfer",
+      reason: "Video log",
+      attachments: "",
+      object: "",
+      comment: "Recording started",
+      timestamp: Date.now(),
+    };
+    saveFlag(flag);
     // Trigger for rec page=============================
     let message = {
       action: "switch-tab",
@@ -162,6 +206,16 @@ function Recording() {
         }
       });
     }
+    let flag = {
+      flag_type: "green",
+      transfer_to: "Don''t Transfer",
+      reason: "Video log",
+      attachments: "",
+      object: "",
+      comment: "Recording stopped",
+      timestamp: Date.now(),
+    };
+    saveFlag(flag);
   };
 
   const pausePlay = () => {
@@ -259,6 +313,7 @@ function Recording() {
   setInterval(() => {
     handleRecordingStatus();
     handleBatteryStatus();
+    addFlags();
   }, 1000);
 
   return (

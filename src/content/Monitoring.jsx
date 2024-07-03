@@ -1,50 +1,55 @@
-import React, { useEffect } from "react";
-let battChargeStatus;
-let battLevel;
+import React, { useState, useEffect, useRef } from "react";
+let minRequiredBatt = 95;
 
 function Monitoring() {
+  const lowBattFlag = useRef("No");
+  const battChargeFlag = useRef("No");
+
   const batteryMonitoring = () => {
     navigator.getBattery().then((battery) => {
-      battChargeStatus = battery.charging;
-      battLevel = battery.level * 100;
-      console.log(`${battChargeStatus} & ${battLevel}%`);
-      if (battChargeStatus === false) {
-        console.log("low battery !");
-        chrome.storage.local.set({ batteryStatus: "low" });
-      } else if (battChargeStatus === true) {
-        chrome.storage.local.set({ batteryStatus: " " });
+      const battChargeStatus = battery.charging ? "Yes" : "No";
+      const battLevel = battery.level * 100;
+      if (
+        battChargeStatus === "No" &&
+        battChargeFlag.current === "No" &&
+        lowBattFlag.current === "No"
+      ) {
+        let flag = {
+          flag_type: "white",
+          transfer_to: "Don''t Transfer",
+          reason: "Battery Alert",
+          attachments: "",
+          object: "",
+          comment: "System is not charging",
+          timestamp: Date.now(),
+        };
+
+        let message = {
+          action: "sendFlags",
+          data: flag,
+        };
+        chrome.runtime.sendMessage(message, (response) => {
+          console.log(response);
+        });
+        battChargeFlag.current = "Yes";
+        // console.log("low battery and flagging");
+      } else if (
+        battChargeStatus === "No" &&
+        battChargeFlag.current === "Yes" &&
+        lowBattFlag.current === "No"
+      ) {
+        console.log(`No charger battery level ${battLevel}%`);
+      } else {
+        console.log("battery back online");
+        battChargeFlag.current = "No";
       }
     });
   };
 
-//   // Function to make the tab full screen
-//   const makeTabFullScreen = () => {
-//     const docElm = document.documentElement;
-//     if (loginStatus === true && e_Status === "exam-ongoing") {
-//       if (docElm.requestFullscreen) {
-//         docElm.requestFullscreen();
-//       } else if (docElm.mozRequestFullScreen) {
-//         // Firefox
-//         docElm.mozRequestFullScreen();
-//       } else if (docElm.webkitRequestFullscreen) {
-//         // Chrome, Safari and Opera
-//         docElm.webkitRequestFullscreen();
-//       } else if (docElm.msRequestFullscreen) {
-//         // IE/Edge
-//         docElm.msRequestFullscreen();
-//         disabledEvent(docElm); // This function call should be placed correctly
-//       }
-//       console.log("fullscreen");
-//     } else {
-//       console.log("exam is not running!");
-//     }
-//   };
-
   useEffect(() => {
-    // makeTabFullScreen();
-    setInterval(() => {
-      batteryMonitoring();
-    }, 1000);
+    const interval = setInterval(batteryMonitoring, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   return <div></div>;
