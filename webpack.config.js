@@ -43,6 +43,7 @@ const config = {
     id_scan: path.join(__dirname, "src", "Pages", "ID_scan", "index.jsx"),
     face_scan: path.join(__dirname, "src", "Pages", "Face_scan", "index.jsx"),
     recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
+    contact: path.join(__dirname, "src", "Pages", "Contact", "index.jsx"),
     output: path.join(__dirname, "src", "index.css"),
   },
   resolve: {
@@ -128,6 +129,11 @@ const config = {
       template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
       filename: "recording.html",
       chunks: ["recording", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Contact", "index.html"),
+      filename: "contact.html",
+      chunks: ["contact", "output"],
     }),
     new CopyWebPackPlugin({
       patterns: [

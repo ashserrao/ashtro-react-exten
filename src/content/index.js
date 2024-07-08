@@ -47,13 +47,13 @@ document.addEventListener("DOMContentLoaded", function (e) {
       liveLink !== "https://testdeliveryconsole.examroom.ai/#/auth/login"
     ) {
       // body.style.opacity = "0";
-      // console.log("content blocked");
-      // let message = {
-      //   info: "content-blocked",
-      // };
-      // chrome.runtime.sendMessage(message, (response) => {
-      //   console.log("Check if working:", response);
-      // });
+      console.log("content blocked");
+      let message = {
+        action: "content-blocked",
+      };
+      chrome.runtime.sendMessage(message, (response) => {
+        console.log("Check if working:", response);
+      });
     } else {
       console.log("content block failed since user is not logged in");
     }

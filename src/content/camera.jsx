@@ -19,7 +19,7 @@ function Camera() {
   useEffect(() => {
     getDevices();
     chrome.storage.local.set({timerStatus: " "}, function(){
-      console.log("Value is set to " + " ");
+      // console.log("Value is set to " + " ");
     })
   }, []);
 
@@ -46,7 +46,7 @@ function Camera() {
     chrome.storage.local.set(
       { recTrigger: "startRec", recStatus: "isNotRec" },
       function () {
-        console.log("Value is set to " + "startRec");
+        // console.log("Value is set to " + "startRec");
       }
     );
     // Trigger for rec page=============================
@@ -63,7 +63,7 @@ function Camera() {
     chrome.storage.local.set(
       { recTrigger: "stopRec" },
       function () {
-        console.log("Value is set to " + "stopRec");
+        // console.log("Value is set to " + "stopRec");
       }
     );
     toggleRec();
@@ -132,9 +132,6 @@ function Camera() {
       }
       console.log(blobs.webcam);
       recordings.push(blobs.webcam);
-      setTimeout(() => {
-        saveVideos();
-      }, 5000);
     };
   };
 
@@ -162,7 +159,7 @@ function Camera() {
         if (result.timerStatus === "stop" && isRec === true) {
           stopRecording();
           chrome.storage.local.set({ timerStatus: " " }, function () {
-            console.log("Value is set to " + " ");
+            // console.log("Value is set to " + " ");
           });
         }
         // console.log("mouse moved");

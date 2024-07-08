@@ -40,7 +40,7 @@ function Monitoring() {
       ) {
         console.log(`No charger battery level ${battLevel}%`);
       } else {
-        console.log("battery back online");
+        // console.log("battery back online");
         battChargeFlag.current = "No";
       }
     });

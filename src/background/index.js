@@ -41,9 +41,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       sendResponse(Flags[0]);
       Flags.shift();
     }
-  } else if (message.action === "sendFlags"){
+  } else if (message.action === "sendFlags") {
     Flags.push(message.data);
-    sendResponse("Flag received.")
+    sendResponse("Flag received.");
+  } else if (message.action === "content-blocked") {
+    openContPage();
   }
 });
 
@@ -77,6 +79,21 @@ function switchBackToPreviousTab() {
 //Trigger recording page =====================================
 function openRecPage() {
   const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
+
+  chrome.tabs.query({ url: url }, function (tabs) {
+    if (tabs.length > 0) {
+      // If the tab is found, make it the active tab
+      chrome.tabs.update(tabs[0].id, { active: true });
+    } else {
+      // If the tab is not found, create a new tab
+      chrome.tabs.create({ url: url });
+    }
+  });
+}
+
+//Trigger contact page ======================================
+function openContPage() {
+  const url = `chrome-extension://${chrome.runtime.id}/contact.html`;
 
   chrome.tabs.query({ url: url }, function (tabs) {
     if (tabs.length > 0) {

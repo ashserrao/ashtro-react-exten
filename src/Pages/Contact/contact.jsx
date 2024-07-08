@@ -1,9 +1,15 @@
 import React from "react";
-import "./App.css";
 
-function App() {
+function Contact() {
   return (
     <div>
+      <style>
+        {`
+          .init-background {
+            background: linear-gradient(119.47deg, #28AAE1 14.41%, #219ED7 17.33%, #1381BF 25.35%, #086CAD 33.37%, #0260A3 41.39%, #005CA0 49.41%, #0464A7 56.71%, #117DBB 69.1%, #25A4DC 83.69%, #28AAE1 85.87%);
+          }
+        `}
+      </style>
       <div className="navbar p-2.5 flex flex-wrap text-lg font-medium">
         <img src="/assets/icon.svg" alt="ExamLock Lite Logo" />
         ExamLock Lite
@@ -39,4 +45,4 @@ function App() {
   );
 }
 
-export default App;
+export default Contact;
