@@ -148,24 +148,24 @@ function Recording() {
     };
 
     screenRecorderRef.current.onstop = function () {
-      if (screenStreamRef.current) {
-        screenStreamRef.current.getTracks().forEach((track) => {
-          if (track.readyState === "live") {
-            track.stop();
-          }
-        });
-      }
+      // if (screenStreamRef.current) {
+      //   screenStreamRef.current.getTracks().forEach((track) => {
+      //     if (track.readyState === "live") {
+      //       track.stop();
+      //     }
+      //   });
+      // }
       save(`screen-recording - ${Date()}`, screenBlobs);
     };
 
     webcamRecorderRef.current.onstop = function () {
-      if (webcamStreamRef.current) {
-        webcamStreamRef.current.getTracks().forEach((track) => {
-          if (track.readyState === "live") {
-            track.stop();
-          }
-        });
-      }
+      // if (webcamStreamRef.current) {
+      //   webcamStreamRef.current.getTracks().forEach((track) => {
+      //     if (track.readyState === "live") {
+      //       track.stop();
+      //     }
+      //   });
+      // }
       save(`webcam-recording - ${Date()}`, webcamBlobs);
     };
   };
@@ -219,17 +219,25 @@ function Recording() {
   };
 
   const pausePlay = () => {
-    if (!screenRecorderRef.current || webcamRecorderRef.current)
-      return console.log("no recording");
+    if (screenRecorderRef.current) screenRecorderRef.current.stop();
+    if (webcamRecorderRef.current) webcamRecorderRef.current.stop();
 
-    screenRecorderRef.current.stop();
-    webcamRecorderRef.current.stop();
-
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       screenRecorderRef.current.start();
       webcamRecorderRef.current.start();
-      backupStatus = true;
-    }, 1000);
+      let flag = {
+        flag_type: "white",
+        transfer_to: "Don''t Transfer",
+        reason: "Video log",
+        attachments: "",
+        object: "",
+        comment: "session backup alert",
+        timestamp: Date.now(),
+      };
+      saveFlag(flag);
+    }, 2000);
+
+    return () => clearTimeout(timeout);
   };
 
   const getPermissions = () => {
@@ -287,6 +295,15 @@ function Recording() {
       ) {
       } else if (result.recTrigger === " " && result.recStatus === "isRec") {
       } else if (
+        result.recTrigger === "playPauseRec" &&
+        result.recStatus === "isRec"
+      ) {
+        chrome.storage.local.set({ recTrigger: " " }, function () {
+          console.log("Value is set to " + " ");
+        });
+        console.log("session backup triggered");
+        pausePlay();
+      } else if (
         result.recTrigger === "stopRec" &&
         result.recStatus === "isRec"
       ) {
@@ -310,11 +327,15 @@ function Recording() {
     });
   };
 
-  setInterval(() => {
-    handleRecordingStatus();
-    handleBatteryStatus();
-    addFlags();
-  }, 1000);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleRecordingStatus();
+      handleBatteryStatus();
+      addFlags();
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div>
