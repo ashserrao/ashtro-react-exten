@@ -22,6 +22,8 @@ const Navbar = () => {
 };
 
 function Recording() {
+  const currentTime = useRef(null);
+  const backupTime = useRef(null);
   const accessApproval = useRef(false);
   const [recordings, setRecordings] = useState([]);
   const battChargeStatusRef = useRef(null);
@@ -101,6 +103,44 @@ function Recording() {
     URL.revokeObjectURL(url);
   };
 
+  // Timer for video backups ===========================
+  const getCurrentDateTime = () => {
+    function addLeadingZero(value) {
+      return value < 10 ? "0" + value : value;
+    }
+
+    let currentDate = new Date();
+
+    let date = addLeadingZero(currentDate.getDate());
+    let month = addLeadingZero(currentDate.getMonth() + 1); // Months are zero-based
+    let year = currentDate.getFullYear();
+    let hours = addLeadingZero(currentDate.getHours());
+    let minutes = addLeadingZero(currentDate.getMinutes());
+    let seconds = addLeadingZero(currentDate.getSeconds());
+
+    return `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
+  const addDateTime = (additionalTime) => {
+    function addLeadingZero(value) {
+      return value < 10 ? "0" + value : value;
+    }
+
+    let newCurrentDate = new Date();
+    newCurrentDate.setMilliseconds(
+      newCurrentDate.getMilliseconds() + additionalTime
+    );
+
+    let date = addLeadingZero(newCurrentDate.getDate());
+    let month = addLeadingZero(newCurrentDate.getMonth() + 1); // Months are zero-based
+    let year = newCurrentDate.getFullYear();
+    let hours = addLeadingZero(newCurrentDate.getHours());
+    let minutes = addLeadingZero(newCurrentDate.getMinutes());
+    let seconds = addLeadingZero(newCurrentDate.getSeconds());
+
+    return `${date}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+  };
+
   const onAccessApproved = (screenStream, webcamStream) => {
     chrome.storage.local.set(
       { recTrigger: " ", recStatus: "isRec", timerStatus: "start" },
@@ -109,7 +149,7 @@ function Recording() {
       }
     );
     let flag = {
-      flag_type: "green",
+      flag_type: "GREEN",
       transfer_to: "Don''t Transfer",
       reason: "Video log",
       attachments: "",
@@ -126,6 +166,7 @@ function Recording() {
     chrome.runtime.sendMessage(message, (response) => {
       console.log(response);
     });
+    backupTime.current = addDateTime(60000); // Assuming you want to add 1 hour (3600000 ms)
     accessApproval.current = false;
     screenStreamRef.current = screenStream;
     webcamStreamRef.current = webcamStream;
@@ -148,24 +189,10 @@ function Recording() {
     };
 
     screenRecorderRef.current.onstop = function () {
-      // if (screenStreamRef.current) {
-      //   screenStreamRef.current.getTracks().forEach((track) => {
-      //     if (track.readyState === "live") {
-      //       track.stop();
-      //     }
-      //   });
-      // }
       save(`screen-recording - ${Date()}`, screenBlobs);
     };
 
     webcamRecorderRef.current.onstop = function () {
-      // if (webcamStreamRef.current) {
-      //   webcamStreamRef.current.getTracks().forEach((track) => {
-      //     if (track.readyState === "live") {
-      //       track.stop();
-      //     }
-      //   });
-      // }
       save(`webcam-recording - ${Date()}`, webcamBlobs);
     };
   };
@@ -182,6 +209,7 @@ function Recording() {
   };
 
   const stopVideo = () => {
+    currentTime.current = null;
     chrome.storage.local.set(
       { recTrigger: "stopRec", recStatus: "isNotRec", timerStatus: "stop" },
       function () {
@@ -207,7 +235,7 @@ function Recording() {
       });
     }
     let flag = {
-      flag_type: "green",
+      flag_type: "GREEN",
       transfer_to: "Don''t Transfer",
       reason: "Video log",
       attachments: "",
@@ -235,6 +263,7 @@ function Recording() {
         timestamp: Date.now(),
       };
       saveFlag(flag);
+      currentTime.current = getCurrentDateTime();
     }, 2000);
 
     return () => clearTimeout(timeout);
@@ -271,7 +300,7 @@ function Recording() {
         console.log(err);
       });
   };
-
+  // handling accidental page unload issue ===============================
   useEffect(() => {
     loadRecordings();
     const handleBeforeUnload = () => {
@@ -327,11 +356,21 @@ function Recording() {
     });
   };
 
+  const sessionBackup = () => {
+    currentTime.current = getCurrentDateTime();
+    // console.log(`${currentTime.current}, ${backupTime.current}`);
+    if(currentTime.current === backupTime.current) {
+      console.log("session backup triggered");
+      backupTime.current = addDateTime(60000);
+    }
+  }
+
   useEffect(() => {
     const interval = setInterval(() => {
       handleRecordingStatus();
       handleBatteryStatus();
       addFlags();
+      sessionBackup();
     }, 1000);
 
     return () => clearInterval(interval);

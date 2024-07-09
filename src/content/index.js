@@ -197,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
   //logging trigger===================================
   function actionLogger(cmt) {
     let flag = {
-      flag_type: "red",
+      flag_type: "RED",
       transfer_to: "Don''t Transfer",
       reason: "Extension Restricted activity",
       attachments: "",

@@ -18,7 +18,7 @@ function Monitoring() {
         lowBattFlag.current === "No"
       ) {
         const flag = {
-          flag_type: "white",
+          flag_type: "WHITE",
           transfer_to: "Don't Transfer",
           reason: "Battery Alert",
           attachments: "",
@@ -74,35 +74,31 @@ function Monitoring() {
     });
   };
 
-  // const displayMonitoring = () => {
-  //   const display = `${window.screen.isExtended}`;
-  //   // console.log(`exta Monitor detected ${typeof { display }}`);
-  //   if (display && extraDisplay === "No") {
-  //     console.log(`exta Monitor detected ${typeof{display}}`);
-  //     // const flag = {
-  //     //   flag_type: "RED",
-  //     //   transfer_to: "Don't Transfer",
-  //     //   reason: "Display Alert",
-  //     //   attachments: "",
-  //     //   object: "",
-  //     //   comment: `extra display added or found`,
-  //     //   timestamp: Date.now(),
-  //     // };
-
-  //     // const message = {
-  //     //   action: "sendFlags",
-  //     //   data: flag,
-  //     // };
-
-  //     // chrome.runtime.sendMessage(message, (response) => {
-  //     //   console.log(response);
-  //     // });
-  //     extraDisplay = "Yes";
-  //   } else if (!display && extraDisplay === "Yes") {
-  //     console.log("exta Monitor removed");
-  //     extraDisplay = "No"
-  //   }
-  // };
+  const displayMonitoring = () => {
+    const display = `${window.screen.isExtended}`;
+    if (display === "true" && extraDisplay.current === "No") {
+      const flag = {
+        flag_type: "RED",
+        transfer_to: "Don't Transfer",
+        reason: "Display Alert",
+        attachments: "",
+        object: "",
+        comment: `extra display added or found`,
+        timestamp: Date.now(),
+      };
+      const message = {
+        action: "sendFlags",
+        data: flag,
+      };
+      chrome.runtime.sendMessage(message, (response) => {
+        console.log(response);
+      });
+      extraDisplay.current = "Yes";
+    } else if (display === "false" && extraDisplay === "Yes") {
+      console.log("exta Monitor removed");
+      extraDisplay = "No";
+    }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {

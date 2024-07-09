@@ -8,6 +8,29 @@ function Consent() {
     setConsent(!consent);
   };
 
+  const onConsent = () => {
+    const flag = {
+      flag_type: "GREEN",
+      transfer_to: "Don't Transfer",
+      reason: "Recording Consent",
+      attachments: "",
+      object: "",
+      comment: "The candidate had given the consent.",
+      timestamp: Date.now(),
+    };
+
+    const message = {
+      action: "sendFlags",
+      data: flag,
+    };
+
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log(response);
+    });
+
+    window.location = "id_scan.html";
+  };
+
   return (
     <div>
       <style>{`
@@ -79,9 +102,7 @@ function Consent() {
             className={`bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700 ${
               !consent && "cursor-not-allowed opacity-50"
             }`}
-            onClick={() => {
-              window.location = "id_scan.html";
-            }}
+            onClick={onConsent}
           >
             Start Recording
           </button>
