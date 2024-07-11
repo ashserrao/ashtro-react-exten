@@ -30,7 +30,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // when candidate opens new tab ===================
 chrome.tabs.onUpdated.addListener(() => {
-  if (loginStatus === true && e_Status === "exam-ongoing") {
+  // if (loginStatus === true && e_Status === "exam-ongoing") {
     chrome.tabs.query({ currentWindow: true }, (allTabs) => {
       allTabs.forEach((tab) => {
         if (!allowedUrls.some((allowedurl) => tab.url.includes(allowedurl))) {
@@ -39,9 +39,9 @@ chrome.tabs.onUpdated.addListener(() => {
         }
       });
     });
-  } else {
-    console.log("Exam is not running");
-  }
+  // } else {
+  //   console.log("Exam is not running");
+  // }
 });
 
 // On message actions ================================
