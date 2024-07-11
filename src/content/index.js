@@ -143,7 +143,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
         "Alt",
         "Meta",
         "meta",
-        "control",
+        // "control",
         "alt",
         // "shift",
         "Escape",
@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
       if (spaceCount === 2) {
         unBlockContent();
         spaceCount = 0;
-        makeTabFullScreen();
+        // makeTabFullScreen();
       }
     } else {
       console.log("Keydown event failed", e);
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
       attachments: "",
       object: "",
       comment: cmt,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     let message = {
       action: "sendFlags",

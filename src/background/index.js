@@ -2,8 +2,47 @@ let Images = [];
 let previousTabId = null;
 let recStatus = false;
 let Flags = [];
+let allowedUrls = [
+  "chrome://",
+  "edge://",
+  "examroom.ai",
+  "chrome-extension://",
+  "https://testdeliveryconsole.examroom.ai/#/auth/login"
+];
 
 console.log("background.js is working");
+
+// on extension installation ======================
+chrome.runtime.onInstalled.addListener(() => {
+  // chrome.tabs.create({ url: "https://www.examroom.ai" });
+  chrome.tabs.query({ currentWindow: true }, (allTabs) => {
+    allTabs.forEach((tab) => {
+      const tabUrl = tab.url;
+      if (!allowedUrls.some((allowedurl) => tabUrl.includes(allowedurl))) {
+        // chrome.tabs.remove(tab.id);
+        console.log(tab.id);
+      } else {
+        chrome.tabs.reload(tab.id);
+      }
+    });
+  });
+});
+
+// when candidate opens new tab ===================
+chrome.tabs.onUpdated.addListener(() => {
+  if (loginStatus === true && e_Status === "exam-ongoing") {
+    chrome.tabs.query({ currentWindow: true }, (allTabs) => {
+      allTabs.forEach((tab) => {
+        if (!allowedUrls.some((allowedurl) => tab.url.includes(allowedurl))) {
+          // chrome.tabs.remove(tab.id);
+          console.log(tab.id);
+        }
+      });
+    });
+  } else {
+    console.log("Exam is not running");
+  }
+});
 
 // On message actions ================================
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -46,8 +85,35 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse("Flag received.");
   } else if (message.action === "content-blocked") {
     openContPage();
+  } else if (message.action === "check-incognito") {
+    chrome.extension.isAllowedIncognitoAccess().then(logIsAllowed);
   }
 });
+
+function logIsAllowed(answer) {
+  if (answer) {
+    chrome.storage.local.set({ incognitoStatus: "Incognito is allowed" });
+  } else {
+    chrome.storage.local.set({ incognitoStatus: "Incognito is not Allowed" });
+  }
+}
+
+function usbChecking() {
+  navigator.usb.getDevices((devices) => {
+    if (devices.length) {
+      let infos = [];
+      devices.forEach((device) => {
+        // console.log(device.productName);
+        // console.log(device.manufacturerName);
+        infos.push(`${device.productName}: ${device.manufacturerName}`);
+      });
+      // chrome.storage.local.set({ usbStatus: `${infos}`});
+      chrome.storage.local.set({ usbStatus: "USB found" });
+    } else {
+      chrome.storage.local.set({usbStatus: 'No USB'});
+    }
+  });
+}
 
 // Record the active tab when the popup is loaded
 function recordTabId() {
