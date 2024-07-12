@@ -1,7 +1,7 @@
 {
   "name": "Ashtro exten",
   "description": "extension with react and webpack",
-  "version": "0.2.1",
+  "version": "2.0.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "popup.html",

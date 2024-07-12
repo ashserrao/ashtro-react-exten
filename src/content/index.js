@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function (e) {
     } else if (
       [
         // "Shift",
-        "Control",
+        // "Control",
         "Alt",
         "Meta",
         "meta",
