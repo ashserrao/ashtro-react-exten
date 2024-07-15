@@ -21,6 +21,10 @@ function Camera() {
     chrome.storage.local.set({timerStatus: " "}, function(){
       // console.log("Value is set to " + " ");
     })
+    const handleBeforeUnload = () => {
+      stopRecording();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
   const getDevices = () => {
@@ -57,9 +61,11 @@ function Camera() {
     chrome.runtime.sendMessage(message, (response) => {
       console.log(response);
     });
+    startVideo();
   };
 
   const stopRecording = () => {
+    stopVideo();
     chrome.storage.local.set(
       { recTrigger: "stopRec" },
       function () {
@@ -248,9 +254,9 @@ function Camera() {
         }
       `}</style>
       <video id="videoPreview" muted autoPlay width={300}></video>
-      <button className="prv-button" onClick={Preview ? stopVideo : startVideo}>
+      {/* <button className="prv-button" onClick={Preview ? stopVideo : startVideo}>
         {Preview ? "Stop Preview" : "Check Camera Preview"}
-      </button>
+      </button> */}
       <button
         className="start-button"
         onClick={isRec ? stopRecording : startRecording}

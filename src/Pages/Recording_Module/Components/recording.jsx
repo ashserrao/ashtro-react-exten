@@ -1,27 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
+import Modal from "react-modal";
 import { openDB } from "idb";
 
-const Navbar = () => {
-  return (
-    <div>
-      <div className="w-full p-2.5 flex flex-wrap text-lg font-medium">
-        <img src="/assets/icon.svg" alt="icon" />
-        ExamLock Lite
-        <span className="flex-auto"></span>
-        <button id="profile">
-          <img
-            className="h-8"
-            src="https://www.svgrepo.com/show/23012/profile-user.svg"
-            alt="profile-icon"
-          />
-        </button>
-      </div>
-      <hr />
-    </div>
-  );
-};
-
 function Recording() {
+  const [consent, setConsent] = useState(false);
+  const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
   const currentTime = useRef(null);
   const backupTime = useRef(null);
   const accessApproval = useRef(false);
@@ -31,6 +14,7 @@ function Recording() {
   const webcamRecorderRef = useRef(null);
   const screenStreamRef = useRef(null);
   const webcamStreamRef = useRef(null);
+  const backduration = useRef(300000);
 
   const dbVideoPromise = openDB("recordings-db", 1, {
     upgrade(db) {
@@ -53,6 +37,10 @@ function Recording() {
       }
     },
   });
+
+  const handleCheckboxChange = () => {
+    setConsent(!consent);
+  };
 
   const saveFlag = async (response) => {
     const db = await dbFlagPromise;
@@ -166,7 +154,7 @@ function Recording() {
     chrome.runtime.sendMessage(message, (response) => {
       console.log(response);
     });
-    backupTime.current = addDateTime(60000); // Assuming you want to add 1 hour (3600000 ms)
+    backupTime.current = addDateTime(backduration.current); // Assuming you want to add 1 hour (3600000 ms)
     accessApproval.current = false;
     screenStreamRef.current = screenStream;
     webcamStreamRef.current = webcamStream;
@@ -206,6 +194,11 @@ function Recording() {
       }
     );
     accessApproval.current = true;
+  };
+
+  const consentHandle = () => {
+    setIsConsentModalOpen(false);
+    startVideo();
   };
 
   const stopVideo = () => {
@@ -316,7 +309,8 @@ function Recording() {
         result.recStatus === "isNotRec" &&
         accessApproval.current === false
       ) {
-        startVideo();
+        // startVideo();
+        setIsConsentModalOpen(true);
       } else if (
         result.recTrigger === "startRec" &&
         result.recStatus === "isNotRec" &&
@@ -342,28 +336,29 @@ function Recording() {
   };
 
   const handleBatteryStatus = () => {
-    chrome.storage.local.get(["batteryStatus"], function (result) {
-      if (result.batteryStatus !== battChargeStatusRef.current) {
-        if (result.batteryStatus === "low") {
-          alert("Battery is low, please charge your device");
-          result.backupStatus = battChargeStatusRef.current;
-        } else if (result.batteryStatus === "medium") {
-          alert("Battery is medium, please charge your device");
-        } else if (result.backupStatus === " ") {
-          result.backupStatus = battChargeStatusRef.current;
-        }
-      }
-    });
+    // chrome.storage.local.get(["batteryStatus"], function (result) {
+    //   if (result.batteryStatus !== battChargeStatusRef.current) {
+    //     if (result.batteryStatus === "low") {
+    //       alert("Battery is low, please charge your device");
+    //       result.backupStatus = battChargeStatusRef.current;
+    //     } else if (result.batteryStatus === "medium") {
+    //       alert("Battery is medium, please charge your device");
+    //     } else if (result.backupStatus === " ") {
+    //       result.backupStatus = battChargeStatusRef.current;
+    //     }
+    //   }
+    // });
   };
 
   const sessionBackup = () => {
     currentTime.current = getCurrentDateTime();
     // console.log(`${currentTime.current}, ${backupTime.current}`);
-    if(currentTime.current === backupTime.current) {
+    if (currentTime.current === backupTime.current) {
       console.log("session backup triggered");
-      backupTime.current = addDateTime(60000);
+      pausePlay();
+      backupTime.current = addDateTime(backduration.current);
     }
-  }
+  };
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -391,8 +386,13 @@ function Recording() {
         text-decoration: none;
         cursor: pointer;
       }
+
+      li {
+        list-style-type: circle;
+        padding-bottom: 1% ;
+      }
+
     `}</style>
-      <Navbar />
       <div className="flex justify-center my-3 content">
         <div className="h-60 overflow-hidden w-10/12 border rounded">
           <h6
@@ -415,7 +415,7 @@ function Recording() {
         </div>
       </div>
       <div className="w-full flex justify-center my-6">
-        {/* <button
+        <button
           className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50"
           onClick={startVideo}
         >
@@ -426,16 +426,87 @@ function Recording() {
           onClick={stopVideo}
         >
           Stop Rec
-        </button> */}
-        <button className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50">
+        </button>
+        <button
+          className="mx-3 px-3 py-2 rounded bg-teal-600 font-semibold text-slate-50"
+          onClick={pausePlay}
+        >
           Resync
         </button>
       </div>
-      <div className="w-full"></div>
+      <Modal isOpen={isConsentModalOpen}>
+        <div className="h-48 pt-52 flex flex-col items-center justify-center">
+          <h1 className="font-bold text-lg">Consent Form</h1>
+          <hr />
+          <div className="py-1 px-6">
+            <ol>
+              <li>
+                We strive to provide a more efficient and streamlined remote
+                proctoring service for all users, both administrators, and
+                candidates. By utilizing APIs and LTIs to create an automated
+                system integrating with most LMS and databases, we can support a
+                single sign-on system. Ensuring exam integrity by providing live
+                person onboarding agents to verify identity and environment
+                scans. Proctoring can be delivered by a live person, with AI
+                assistance, or a standalone AI proctoring service.
+              </li>
+              <li>
+                We strive to provide a more efficient and streamlined remote
+                proctoring service for all users, both administrators, and
+                candidates. By utilizing APIs and LTIs to create an automated
+                system integrating with most LMS and databases, we can support a
+                single sign-on system. Ensuring exam integrity by providing live
+                person onboarding agents to verify identity and environment
+                scans. Proctoring can be delivered by a live person, with AI
+                assistance, or a standalone AI proctoring service.
+              </li>
+              <li>
+                We strive to provide a more efficient and streamlined remote
+                proctoring service for all users, both administrators, and
+                candidates. By utilizing APIs and LTIs to create an automated
+                system integrating with most LMS and databases, we can support a
+                single sign-on system. Ensuring exam integrity by providing live
+                person onboarding agents to verify identity and environment
+                scans. Proctoring can be delivered by a live person, with AI
+                assistance, or a standalone AI proctoring service.
+              </li>
+              <li>
+                We strive to provide a more efficient and streamlined remote
+                proctoring service for all users, both administrators, and
+                candidates. By utilizing APIs and LTIs to create an automated
+                system integrating with most LMS and databases, we can support a
+                single sign-on system. Ensuring exam integrity by providing live
+                person onboarding agents to verify identity and environment
+                scans. Proctoring can be delivered by a live person, with AI
+                assistance, or a standalone AI proctoring service.
+              </li>
+            </ol>
+          </div>
+          <div className="flex flex-wrap px-2">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={handleCheckboxChange}
+            />
+            <span className="p-2">
+              I have read and accepted the terms and conditions
+            </span>
+            <span className="flex flex-auto"></span>
+            <button
+              disabled={!consent}
+              style={{ marginLeft: "77rem" }}
+              className={`bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700 ${
+                !consent ? "cursor-not-allowed opacity-50" : ""
+              }`}
+              onClick={consentHandle}
+            >
+              Start Recording
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
 
 export default Recording;
-
-export { Navbar };

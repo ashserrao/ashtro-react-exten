@@ -1,4 +1,5 @@
 import React from "react";
+import { Navbar } from "../Recording_Module/module";
 
 function Contact() {
   return (
@@ -10,12 +11,7 @@ function Contact() {
           }
         `}
       </style>
-      <div className="navbar p-2.5 flex flex-wrap text-lg font-medium">
-        <img src="/assets/icon.svg" alt="ExamLock Lite Logo" />
-        ExamLock Lite
-        <span className="flex-auto"></span>
-      </div>
-      <hr />
+      <Navbar />
       <div className="init-background h-3/6 flex flex-initial">
         <div>
           <img className="w-60" src="./assets/bot image.png" alt="bot-image" />

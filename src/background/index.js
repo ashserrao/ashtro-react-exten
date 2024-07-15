@@ -1,3 +1,5 @@
+import { Navigate } from "react-router-dom";
+
 let Images = [];
 let previousTabId = null;
 let recStatus = false;
@@ -7,10 +9,14 @@ let allowedUrls = [
   "edge://",
   "examroom.ai",
   "chrome-extension://",
-  "https://testdeliveryconsole.examroom.ai/#/auth/login"
+  "https://testdeliveryconsole.examroom.ai/#/auth/login",
 ];
 
 console.log("background.js is working");
+
+// setInterval(() => {
+//   usbChecking();
+// }, 5000)
 
 // on extension installation ======================
 chrome.runtime.onInstalled.addListener(() => {
@@ -31,14 +37,14 @@ chrome.runtime.onInstalled.addListener(() => {
 // when candidate opens new tab ===================
 chrome.tabs.onUpdated.addListener(() => {
   // if (loginStatus === true && e_Status === "exam-ongoing") {
-    chrome.tabs.query({ currentWindow: true }, (allTabs) => {
-      allTabs.forEach((tab) => {
-        if (!allowedUrls.some((allowedurl) => tab.url.includes(allowedurl))) {
-          // chrome.tabs.remove(tab.id);
-          console.log(tab.id);
-        }
-      });
+  chrome.tabs.query({ currentWindow: true }, (allTabs) => {
+    allTabs.forEach((tab) => {
+      if (!allowedUrls.some((allowedurl) => tab.url.includes(allowedurl))) {
+        // chrome.tabs.remove(tab.id);
+        console.log(tab.id);
+      }
     });
+  });
   // } else {
   //   console.log("Exam is not running");
   // }
@@ -98,23 +104,6 @@ function logIsAllowed(answer) {
   }
 }
 
-function usbChecking() {
-  navigator.usb.getDevices((devices) => {
-    if (devices.length) {
-      let infos = [];
-      devices.forEach((device) => {
-        // console.log(device.productName);
-        // console.log(device.manufacturerName);
-        infos.push(`${device.productName}: ${device.manufacturerName}`);
-      });
-      // chrome.storage.local.set({ usbStatus: `${infos}`});
-      chrome.storage.local.set({ usbStatus: "USB found" });
-    } else {
-      chrome.storage.local.set({usbStatus: 'No USB'});
-    }
-  });
-}
-
 // Record the active tab when the popup is loaded
 function recordTabId() {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -144,7 +133,7 @@ function switchBackToPreviousTab() {
 
 //Trigger recording page =====================================
 function openRecPage() {
-  const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
+  const url = `chrome-extension://${chrome.runtime.id}/recording.html/recordings`;
 
   chrome.tabs.query({ url: url }, function (tabs) {
     if (tabs.length > 0) {
@@ -152,7 +141,9 @@ function openRecPage() {
       chrome.tabs.update(tabs[0].id, { active: true });
     } else {
       // If the tab is not found, create a new tab
-      chrome.tabs.create({ url: url });
+      chrome.tabs.create({
+        url: `chrome-extension://${chrome.runtime.id}/recording.html`,
+      });
     }
   });
 }

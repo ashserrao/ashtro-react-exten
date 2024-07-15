@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Navbar } from "../Recording/recording";
+import { useNavigate } from "react-router-dom";
 
 function Consent() {
+  const navigate = useNavigate();
   const [consent, setConsent] = useState(false);
 
   const handleCheckboxChange = () => {
@@ -28,18 +29,17 @@ function Consent() {
       console.log(response);
     });
 
-    window.location = "id_scan.html";
+    navigate("/recording.html/id_scan");
   };
 
   return (
     <div>
       <style>{`
     li {
-    list-style-type: circle;
-    padding-bottom: 1% ;
-}
+      list-style-type: circle;
+      padding-bottom: 1% ;
+    }
     `}</style>
-      <Navbar />
       <div className="mx-10 my-4 p-2 border">
         <h1 className="font-bold text-lg">Consent Form</h1>
         <hr />

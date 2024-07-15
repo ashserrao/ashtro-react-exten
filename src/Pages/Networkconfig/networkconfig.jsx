@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navbar } from "../Recording/recording"; // Adjust the import according to your file structure
+import { Navbar } from "../Recording_Module/module"; // Adjust the import according to your file structure
 
 function Network() {
   const [isWebRTCSupported, setIsWebRTCSupported] = useState(null);
@@ -21,7 +21,14 @@ function Network() {
   }, []);
 
   const nextWindow = () => {
-    const url = `chrome-extension://${chrome.runtime.id}/consent.html`;
+    // Trigger to get consent page=============================
+    chrome.storage.local.set(
+      { recTrigger: " "},
+      function () {
+        // console.log("Value is set to " + "startRec");
+      }
+    );
+    const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
     chrome.tabs.create({
       url: url,
     });

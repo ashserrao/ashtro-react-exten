@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Navbar } from "../Recording/recording";
+import { Navbar } from "../Recording_Module/module";
 
 function Softconfig() {
   const cardRef = useRef(null);

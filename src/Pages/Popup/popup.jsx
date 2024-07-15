@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navbar } from "../Recording/recording";
+import { Navbar } from "../Recording_Module/module";
 
 const Popup = () => {
   const [os, setOs] = useState("Loading...");

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Navbar } from "../Recording/recording";
+import { Navbar } from "../Recording_Module/module";
 import Progressbar from "./Progressbar";
 
 function Systemcheck() {

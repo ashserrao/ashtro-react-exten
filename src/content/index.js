@@ -10,6 +10,12 @@ const loginStatus = true;
 const liveLink = " ";
 const e_Status = "exam-ongoing";
 
+// Prevent direct window exit confirmation ========================
+window.addEventListener("beforeunload", function (e) {
+  e.preventDefault();
+  e.returnValue = ""; // This line is necessary for the confirmation dialog to show
+});
+
 //Trigger popup =====================================
 setTimeout(() => {
   Trigger();
@@ -253,3 +259,28 @@ function disabledEvent(e) {
     return false;
   }
 }
+
+// Function to check for already connected USB devices
+async function checkExistingDevices() {
+  try {
+    const devices = await navigator.usb.getDevices();
+    if (devices.length > 0) {
+      console.log("USB device(s) already connected:", devices);
+    } else {
+      console.log("No USB devices connected.");
+    }
+  } catch (error) {
+    console.error("Error checking USB devices:", error);
+  }
+}
+
+// Listen for new USB device connections
+navigator.usb.addEventListener("connect", (event) => {
+  checkExistingDevices();
+  console.log("USB device connected:", event.device);
+});
+
+// Listen for USB device disconnections
+navigator.usb.addEventListener("disconnect", (event) => {
+  console.log("USB device disconnected:", event.device);
+});

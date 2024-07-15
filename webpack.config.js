@@ -39,10 +39,13 @@ const config = {
       "Networkconfig",
       "index.jsx"
     ),
-    consent: path.join(__dirname, "src", "Pages", "Consent", "index.jsx"),
-    id_scan: path.join(__dirname, "src", "Pages", "ID_scan", "index.jsx"),
-    face_scan: path.join(__dirname, "src", "Pages", "Face_scan", "index.jsx"),
-    recording: path.join(__dirname, "src", "Pages", "Recording", "index.jsx"),
+    recording: path.join(
+      __dirname,
+      "src",
+      "Pages",
+      "Recording_Module",
+      "index.jsx"
+    ),
     contact: path.join(__dirname, "src", "Pages", "Contact", "index.jsx"),
     output: path.join(__dirname, "src", "index.css"),
   },
@@ -53,12 +56,14 @@ const config = {
       .concat([".js", ".jsx", ".ts", ".tsx", ".css"]),
   },
   output: {
+    publicPath: "/",
     path: path.resolve(__dirname, "dist"),
     filename: "[name].bundle.js",
   },
   devServer: {
     open: true,
     host: "localhost",
+    historyApiFallback: true,
   },
   plugins: [
     new HtmlWebpackPlugin({
@@ -111,22 +116,13 @@ const config = {
       chunks: ["networkconfig", "output"],
     }),
     new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Pages", "Consent", "index.html"),
-      filename: "consent.html",
-      chunks: ["consent", "output"],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Pages", "ID_scan", "index.html"),
-      filename: "id_scan.html",
-      chunks: ["id_scan", "output"],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Pages", "Face_scan", "index.html"),
-      filename: "face_scan.html",
-      chunks: ["face_scan", "output"],
-    }),
-    new HtmlWebpackPlugin({
-      template: path.join(__dirname, "src", "Pages", "Recording", "index.html"),
+      template: path.join(
+        __dirname,
+        "src",
+        "Pages",
+        "Recording_Module",
+        "index.html"
+      ),
       filename: "recording.html",
       chunks: ["recording", "output"],
     }),

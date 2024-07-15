@@ -1,14 +1,14 @@
 import React, { useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Webcam from "react-webcam";
 import Modal from "react-modal";
-import { Navbar } from "../Recording/recording";
 
-function Idscan() {
-  let imagesAllowed = 2;
+function Facescan() {
+  const navigate = useNavigate();
+  let imagesAllowed = 1;
   const webcamRef = useRef(null);
   const [submit, setSubmit] = useState(false);
   const [images, setImages] = useState([]);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [currentImage, setCurrentImage] = useState(null);
 
@@ -23,45 +23,9 @@ function Idscan() {
     });
   };
 
-  const handleUpload = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImages((prevImages) => {
-        const newImages = [...prevImages, reader.result];
-        if (newImages.length >= imagesAllowed) {
-          setSubmit(true);
-        }
-        return newImages;
-      });
-    };
-    if (file) {
-      reader.readAsDataURL(file);
-    }
-    closeUploadModal();
-  };
-
-  const deleteImage = (index) => {
-    setImages((prevImages) => {
-      const newImages = prevImages.filter((_, i) => i !== index);
-      if (newImages.length < imagesAllowed) {
-        setSubmit(false);
-      }
-      return newImages;
-    });
-  };
-
   const clearAllImages = () => {
     setImages([]);
     setSubmit(false);
-  };
-
-  const openUploadModal = () => {
-    setIsUploadModalOpen(true);
-  };
-
-  const closeUploadModal = () => {
-    setIsUploadModalOpen(false);
   };
 
   const openViewModal = (imageSrc) => {
@@ -74,16 +38,28 @@ function Idscan() {
     setCurrentImage(null);
   };
 
-  const handleSubmit = async () => {
-    console.log("Submitting images:", images);
+  const switchback = () => {
     let message = {
-      action: "id-cards",
+      action: "switch-tab",
       data: images,
     };
     chrome.runtime.sendMessage(message, (response) => {
       console.log("Response from background script:", response);
     });
-    window.location = "./face_scan.html";
+  };
+
+  const handleSubmit = async () => {
+    console.log("Submitting images:", images);
+    let message = {
+      action: "face-capture",
+      data: images,
+    };
+    chrome.runtime.sendMessage(message, (response) => {
+      console.log("Response from background script:", response);
+    });
+    switchback();
+    // window.location = "./recording.html";
+    navigate("/recording.html/recordings");
   };
 
   return (
@@ -99,13 +75,12 @@ function Idscan() {
       object-fit: contain;
     }
     `}</style>
-      <Navbar />
       <div className="flex flex-wrap">
         <div
           className="h-full w-1/2 rounded border"
           style={{ height: "35.5rem" }}
         >
-          <h1 className="text-center text-lg font-semibold">ID scan</h1>
+          <h1 className="text-center text-lg font-semibold">Face scan</h1>
           <div className="w-full flex justify-center">
             <Webcam
               audio={false}
@@ -123,19 +98,13 @@ function Idscan() {
               {submit ? "Submit" : "Capture photo"}
             </button>
             <button
-              onClick={openUploadModal}
-              className={`m-2 bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700 ${
-                submit && "cursor-not-allowed opacity-50"
-              }`}
-              disabled={submit}
-            >
-              Upload Image
-            </button>
-            <button
               onClick={clearAllImages}
-              className="m-2 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700"
+              className={`m-2 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700 ${
+                !submit && "cursor-not-allowed opacity-50"
+              }`}
+              disabled={!submit}
             >
-              Delete All
+              Retake photo
             </button>
           </div>
         </div>
@@ -153,7 +122,7 @@ function Idscan() {
                   className="flex text-center my-2 mx-4 p-2 border"
                   style={{ flexDirection: "column" }}
                 >
-                  <h1 className="w-full text-medium font-semibold">{`Image ${
+                  <h1 className="w-full text-medium font-semibold">{`Photo ${
                     index + 1
                   }`}</h1>
                   <img
@@ -162,12 +131,6 @@ function Idscan() {
                     alt={`Captured ${index + 1}`}
                     style={{ width: "400px", cursor: "pointer" }}
                   />
-                  <button
-                    onClick={() => deleteImage(index)}
-                    className="my-2 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700"
-                  >
-                    Delete
-                  </button>
                 </div>
               ))}
             </div>
@@ -180,47 +143,21 @@ function Idscan() {
         <div className="px-6 my-2">
           <ul>
             <li>
-              Your can either capture the ID using your web-camera or you can
-              upload the image of your ID
-            </li>
-            <li>
-              Please align yourself in the middle of the frame before capturing
+              Please align yourself in between the camera frame before clicking
               the photo.
             </li>
+            <li>Please look towards the camera while capturing the picture.</li>
             <li>
-              Please upload a valid ID else your exam will be disqualified.
+              Incase the marksheet requires a photo the same photo will be
+              attached.
             </li>
-            <li>Please make sure the ID is not expired.</li>
-            <li>One photo ID is mandatory.</li>
+            <li>
+              Please ensure that your face is clearly visible to the camera.
+            </li>
+            <li>Check the photo preview before submitting the photo.</li>
           </ul>
         </div>
       </div>
-
-      <Modal
-        isOpen={isUploadModalOpen}
-        onRequestClose={closeUploadModal}
-        contentLabel="Upload Image"
-        ariaHideApp={false}
-        style={{
-          content: {
-            top: "50%",
-            left: "50%",
-            right: "auto",
-            bottom: "auto",
-            marginRight: "-50%",
-            transform: "translate(-50%, -50%)",
-          },
-        }}
-      >
-        <h2 className="font-semibold">Upload Image</h2>
-        <input type="file" accept="image/*" onChange={handleUpload} />
-        <button
-          onClick={closeUploadModal}
-          className="mt-4 bg-red-600 text-slate-100 font-semibold rounded p-2 hover:bg-red-700"
-        >
-          Close
-        </button>
-      </Modal>
       <Modal
         isOpen={isViewModalOpen}
         onRequestClose={closeViewModal}
@@ -228,7 +165,6 @@ function Idscan() {
         ariaHideApp={false}
         style={{
           content: {
-            width: "40%",
             top: "50%",
             left: "50%",
             right: "auto",
@@ -254,4 +190,4 @@ function Idscan() {
   );
 }
 
-export default Idscan;
+export default Facescan;
