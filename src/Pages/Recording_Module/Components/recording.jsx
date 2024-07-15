@@ -434,7 +434,22 @@ function Recording() {
           Resync
         </button>
       </div>
-      <Modal isOpen={isConsentModalOpen}>
+      <Modal
+        isOpen={isConsentModalOpen}
+        style={{
+          content: {
+            padding: "3rem",
+            width: "91%",
+            height: "63%",
+            top: "50%",
+            left: "50%",
+            right: "auto",
+            bottom: "auto",
+            marginRight: "-50%",
+            transform: "translate(-50%, -50%)",
+          },
+        }}
+      >
         <div className="h-48 pt-52 flex flex-col items-center justify-center">
           <h1 className="font-bold text-lg">Consent Form</h1>
           <hr />
@@ -494,7 +509,7 @@ function Recording() {
             <span className="flex flex-auto"></span>
             <button
               disabled={!consent}
-              style={{ marginLeft: "77rem" }}
+              style={{ marginLeft: "69rem" }}
               className={`bg-teal-600 text-slate-100 font-semibold rounded p-2 hover:bg-teal-700 ${
                 !consent ? "cursor-not-allowed opacity-50" : ""
               }`}
