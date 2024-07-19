@@ -136,8 +136,8 @@ function Camera() {
           }
         });
       }
-      console.log(blobs.webcam);
-      recordings.push(blobs.webcam);
+      // console.log(blobs.webcam);
+      // recordings.push(blobs.webcam);
     };
   };
 
@@ -163,7 +163,7 @@ function Camera() {
     const handleRecordingStatus = () => {
       chrome.storage.local.get(["timerStatus"], function (result) {
         if (result.timerStatus === "stop" && isRec === true) {
-          stopRecording();
+          // stopRecording();
           chrome.storage.local.set({ timerStatus: " " }, function () {
             // console.log("Value is set to " + " ");
           });
