@@ -23,4 +23,4 @@ To run the build files go to manage extensions.\
     4. Select the build folder.
 
 
-### Specifically designed for BCIA Client
+### Currently no api's are connected to this.
