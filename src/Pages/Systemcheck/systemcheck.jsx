@@ -203,18 +203,29 @@ function Systemcheck() {
                     <Progressbar progress={cpuUsed} />
                   </div>
                 </div>
-                <div className="border rounded p-1">
-                  <div id="core-chart" className="grid grid-cols-2 gap-2">
-                    {coreUsage.map((usage, index) => (
-                      <div key={index}>
-                        <span>
-                          CPU{index + 1}
-                          <span className="pl-28"></span> {usage}%
-                        </span>
-                        <Progressbar progress={usage} />
-                      </div>
-                    ))}
-                  </div>
+                <div className="border rounded p-1 flex justify-center item-center">
+                  {coreUsage.length > 0 ? (
+                    <div id="core-chart" className="grid grid-cols-2 gap-2">
+                      {coreUsage.map((usage, index) => (
+                        <div key={index}>
+                          <span>
+                            CPU{index + 1}
+                            <span className="pl-28"></span> {usage}%
+                          </span>
+                          <Progressbar progress={usage} />
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-e-transparent align-[-0.125em] text-surface motion-reduce:animate-[spin_1.5s_linear_infinite] dark:text-[#1889c5]"
+                      role="status"
+                    >
+                      <span class="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                        Loading...
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

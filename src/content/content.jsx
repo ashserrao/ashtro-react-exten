@@ -103,8 +103,8 @@ function Content() {
         ...containerStyle,
       }}
     >
-      <Minified />
-      <Camera />
+      {/* <Minified /> */}
+      {/* <Camera /> */}
       <Monitoring />
     </div>
   );

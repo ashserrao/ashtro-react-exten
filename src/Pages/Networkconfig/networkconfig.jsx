@@ -21,17 +21,19 @@ function Network() {
   }, []);
 
   const nextWindow = () => {
+    window.close();
     // Trigger to get consent page=============================
-    chrome.storage.local.set(
-      { recTrigger: " "},
-      function () {
-        // console.log("Value is set to " + "startRec");
-      }
-    );
-    const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
-    chrome.tabs.create({
-      url: url,
-    });
+    // chrome.storage.local.set(
+    //   { recTrigger: " "},
+    //   function () {
+    //     // console.log("Value is set to " + "startRec");
+    //   }
+    // );
+
+    // const url = `chrome-extension://${chrome.runtime.id}/recording.html`;
+    // chrome.tabs.create({
+    //   url: url,
+    // });
   };
 
   return (

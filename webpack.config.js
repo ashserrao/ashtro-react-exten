@@ -46,6 +46,13 @@ const config = {
       "Recording_Module",
       "index.jsx"
     ),
+    devtools: path.join(
+      __dirname,
+      "src",
+      "pages",
+      "Devtools",
+      "index.jsx",
+    ),
     contact: path.join(__dirname, "src", "Pages", "Contact", "index.jsx"),
     output: path.join(__dirname, "src", "index.css"),
   },
@@ -125,6 +132,11 @@ const config = {
       ),
       filename: "recording.html",
       chunks: ["recording", "output"],
+    }),
+    new HtmlWebpackPlugin({
+      template: path.join(__dirname, "src", "Pages", "Devtools", "index.html"),
+      filename: "devtools.html",
+      chunks: ["devtools"],
     }),
     new HtmlWebpackPlugin({
       template: path.join(__dirname, "src", "Pages", "Contact", "index.html"),

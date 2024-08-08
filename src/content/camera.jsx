@@ -16,17 +16,23 @@ function Camera() {
   const screenStreamRef = useRef(null);
   const webcamStreamRef = useRef(null);
 
+  //---------------------------------
+  // @ React hooks
+  //---------------------------------
   useEffect(() => {
     getDevices();
-    chrome.storage.local.set({timerStatus: " "}, function(){
+    chrome.storage.local.set({ timerStatus: " " }, function () {
       // console.log("Value is set to " + " ");
-    })
+    });
     const handleBeforeUnload = () => {
       stopRecording();
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
   }, []);
 
+  /**
+   * get list of devices
+   */
   const getDevices = () => {
     navigator.mediaDevices
       .enumerateDevices()
@@ -43,6 +49,9 @@ function Camera() {
       .catch((err) => console.error("Error getting media devices: ", err));
   };
 
+  /**
+   * Start recording function
+   */
   const startRecording = () => {
     toggleRec();
     togglePopup();
@@ -53,6 +62,7 @@ function Camera() {
         // console.log("Value is set to " + "startRec");
       }
     );
+
     // Trigger for rec page=============================
     let message = {
       action: "recording-page",
@@ -64,14 +74,14 @@ function Camera() {
     startVideo();
   };
 
+  /**
+   * Stop recording function
+   */
   const stopRecording = () => {
     stopVideo();
-    chrome.storage.local.set(
-      { recTrigger: "stopRec" },
-      function () {
-        // console.log("Value is set to " + "stopRec");
-      }
-    );
+    chrome.storage.local.set({ recTrigger: "stopRec" }, function () {
+      // console.log("Value is set to " + "stopRec");
+    });
     toggleRec();
     let message = {
       action: "recording-page",
@@ -82,10 +92,16 @@ function Camera() {
     });
   };
 
+  /**
+   * Tigger video function
+   */
   const startVideo = () => {
     getPermissions();
   };
 
+  /**
+   * stop video function
+   */
   const stopVideo = () => {
     setPreview(!Preview);
     if (screenRecorderRef.current) screenRecorderRef.current.stop();
@@ -108,6 +124,9 @@ function Camera() {
     }
   };
 
+  /**
+   * media after permissions function
+   */
   const onAccessApproved = (webcamStream) => {
     setPreview(!Preview);
     webcamStreamRef.current = webcamStream;
@@ -141,6 +160,9 @@ function Camera() {
     };
   };
 
+  /**
+   * get permissions function
+   */
   const getPermissions = () => {
     const constraints = {
       video: {
@@ -160,21 +182,25 @@ function Camera() {
       });
   };
 
-    const handleRecordingStatus = () => {
-      chrome.storage.local.get(["timerStatus"], function (result) {
-        if (result.timerStatus === "stop" && isRec === true) {
-          // stopRecording();
-          chrome.storage.local.set({ timerStatus: " " }, function () {
-            // console.log("Value is set to " + " ");
-          });
-        }
-        // console.log("mouse moved");
-      });
-    };
+  /**
+   * handle recording status function
+   */
+  const handleRecordingStatus = () => {
+    chrome.storage.local.get(["timerStatus"], function (result) {
+      if (result.timerStatus === "stop" && isRec === true) {
+        // stopRecording();
+        chrome.storage.local.set({ timerStatus: " " }, function () {
+          // console.log("Value is set to " + " ");
+        });
+      }
+      // console.log("mouse moved");
+    });
+  };
 
-  // trigger function on event;
-  window.addEventListener("mousemove", function(){
-    // console.log("mouse moved");
+  /**
+   * trigger function on event;
+   */
+  window.addEventListener("mousemove", function () {
     handleRecordingStatus();
   });
 

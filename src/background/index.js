@@ -1,7 +1,8 @@
-import { Navigate } from "react-router-dom";
+const { tab } = require("@testing-library/user-event/dist/tab");
 
 let Images = [];
 let previousTabId = null;
+let mainPageURL = "";
 let recStatus = false;
 let Flags = [];
 let allowedUrls = [
@@ -14,18 +15,23 @@ let allowedUrls = [
 
 console.log("background.js is working");
 
-// setInterval(() => {
-//   usbChecking();
-// }, 5000)
+/**
+ * USB Checking
+ */
+setInterval(() => {
+  usbChecking();
+}, 5000);
 
-// on extension installation ======================
+/**
+ * on extension installation
+ */
 chrome.runtime.onInstalled.addListener(() => {
   // chrome.tabs.create({ url: "https://www.examroom.ai" });
   chrome.tabs.query({ currentWindow: true }, (allTabs) => {
     allTabs.forEach((tab) => {
       const tabUrl = tab.url;
       if (!allowedUrls.some((allowedurl) => tabUrl.includes(allowedurl))) {
-        // chrome.tabs.remove(tab.id);
+        chrome.tabs.remove(tab.id);
         console.log(tab.id);
       } else {
         chrome.tabs.reload(tab.id);
@@ -34,19 +40,83 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-// when candidate opens new tab ===================
+/**
+ * when candidate opens new tab
+ */
 chrome.tabs.onUpdated.addListener(() => {
   chrome.tabs.query({ currentWindow: true }, (allTabs) => {
     allTabs.forEach((tab) => {
       if (!allowedUrls.some((allowedurl) => tab.url.includes(allowedurl))) {
-        // chrome.tabs.remove(tab.id);
+        chrome.tabs.remove(tab.id);
         console.log(tab.id);
       }
     });
   });
 });
 
-// On message actions ================================
+/**
+ * Function to create and show a push notification
+ */
+function showNotification(title, message) {
+  const options = {
+    type: "basic",
+    iconUrl: "assets/icon.png",
+    title: "Examlock Warning",
+    message: "Please return back to you examination screen.",
+    priority: 3,
+  };
+
+  chrome.notifications.create(
+    "minimizedNotification",
+    options,
+    function (notificationId) {
+      chrome.notifications.onClicked.addListener(function (
+        clickedNotificationId
+      ) {
+        if (clickedNotificationId === notificationId) {
+          chrome.tabs.query(
+            { active: true, currentWindow: true },
+            function (tabs) {
+              if (tabs && tabs.length > 0) {
+                chrome.tabs.update(tabs[0].id, { active: true }, function () {
+                  chrome.windows.update(tabs[0].windowId, { focused: true });
+                });
+              }
+            }
+          );
+        }
+      });
+    }
+  );
+}
+
+/**
+ * screen minimize detection
+ */
+chrome.tabs.onActivated.addListener((tab) => {
+  chrome.tabs.get(tab.tabId, (current_tab_info) => {
+    if (current_tab_info.url.includes(mainPageURL)) {
+      chrome.windows.onFocusChanged.addListener((windowId) => {
+        if (windowId === chrome.windows.WINDOW_ID_NONE) {
+          let message = {
+            info: "block content",
+          };
+          chrome.runtime.sendMessage(message, (response) => {
+            console.log(response);
+          });
+          showNotification(
+            "Examlock Warning",
+            "Please return back to you examination screen."
+          );
+        }
+      });
+    }
+  });
+});
+
+/**
+ * On message actions
+ */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "recording-page") {
     recordTabId();
@@ -86,7 +156,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     Flags.push(message.data);
     sendResponse("Flag received.");
   } else if (message.action === "content-blocked") {
-    openContPage();
+    // openContPage();
   } else if (message.action === "check-incognito") {
     chrome.extension.isAllowedIncognitoAccess().then(logIsAllowed);
   }
@@ -100,18 +170,22 @@ function logIsAllowed(answer) {
   }
 }
 
-// Record the active tab when the popup is loaded
+/**
+ * Record the active tab when the popup is loaded
+ */
 function recordTabId() {
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     if (tabs.length > 0) {
       previousTabId = tabs[0].id;
+      mainPageURL = tabs[0].url;
       console.log("Recorded active Tab ID: ", previousTabId);
     }
   });
   return true;
 }
-
-// Function to switch back to the previous tab
+/**
+ * Function to switch back to the previous tab
+ */
 function switchBackToPreviousTab() {
   if (previousTabId !== null) {
     chrome.tabs.update(previousTabId, { active: true }, function (tab) {
@@ -127,7 +201,9 @@ function switchBackToPreviousTab() {
   }
 }
 
-//Trigger recording page =====================================
+/**
+ * Trigger recording page
+ */
 function openRecPage() {
   const url = `chrome-extension://${chrome.runtime.id}/recording.html/recordings`;
 
@@ -144,7 +220,9 @@ function openRecPage() {
   });
 }
 
-//Trigger contact page ======================================
+/**
+ * Trigger contact page
+ */
 function openContPage() {
   const url = `chrome-extension://${chrome.runtime.id}/contact.html`;
 
@@ -157,4 +235,50 @@ function openContPage() {
       chrome.tabs.create({ url: url });
     }
   });
+}
+
+/**
+ * Function on opening dev tools
+ */
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "devtools") {
+    port.onMessage.addListener((msg) => {
+      if (msg.name === "openDevTools") {
+        fetchSystemIP();
+        onDevToolsOpen();
+      }
+    });
+  }
+});
+
+/**
+ * directing to the hack ui page
+ */
+function onDevToolsOpen() {
+  chrome.tabs.query({ currentWindow: true }, (allTabs) => {
+    chrome.tabs.create({ url: "https://examroom.ai/34pizy6/" });
+    allTabs.forEach((tab) => {
+      const tabUrl = tab.url;
+      if (tabUrl === "https://examroom.ai/34pizy6/") {
+        console.log("you tried to hack us page");
+      } else {
+        chrome.tabs.remove(tab.id);
+      }
+    });
+  });
+}
+
+/**
+ * Fetch system IP
+ */
+function fetchSystemIP() {
+  fetch("https://api64.ipify.org?format=json")
+    .then((response) => response.json())
+    .then((data) => {
+      const systemIP = data.ip;
+      console.log("Current System IP:", systemIP);
+    })
+    .catch((error) => {
+      console.error("Error fetching IP address:", error);
+    });
 }
